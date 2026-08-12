@@ -1,0 +1,89 @@
+{
+  "name": "lokalizator",
+  "displayName": "Lokalizator",
+  "description": "Visualize .resx localization resources as a key/language table.",
+  "version": "0.0.1",
+  "publisher": "kosta",
+  "private": true,
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "lokalizator.openTable",
+        "title": "Lokalizator: Open Resx Table",
+        "icon": "$(table)"
+      },
+      {
+        "command": "lokalizator.refreshTable",
+        "title": "Lokalizator: Refresh Table",
+        "icon": "$(refresh)"
+      }
+    ],
+    "menus": {
+      "explorer/context": [
+        {
+          "command": "lokalizator.openTable",
+          "when": "resourceExtname == .resx",
+          "group": "lokalizator"
+        }
+      ],
+      "view/title": [
+        {
+          "command": "lokalizator.refreshTable",
+          "when": "view == lokalizator.fileListView",
+          "group": "navigation"
+        }
+      ]
+    },
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "lokalizator",
+          "title": "Lokalizator",
+          "icon": "media/icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "lokalizator": [
+        {
+          "id": "lokalizator.fileListView",
+          "name": "Resx Files",
+          "type": "webview"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "compile": "node esbuild.js",
+    "watch": "node esbuild.js --watch",
+    "package": "node esbuild.js --production",
+    "check-types": "tsc --noEmit",
+    "lint": "eslint src",
+    "vscode:prepublish": "npm run check-types && npm run lint && npm run package",
+    "vsix": "vsce package"
+  },
+  "dependencies": {
+    "fast-xml-parser": "^4.5.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "@types/vscode": "^1.90.0",
+    "@typescript-eslint/eslint-plugin": "^7.18.0",
+    "@typescript-eslint/parser": "^7.18.0",
+    "@vscode/vsce": "^3.1.0",
+    "esbuild": "^0.23.0",
+    "eslint": "^8.57.0",
+    "typescript": "^5.5.4"
+  },
+  "allowScripts": {
+    "esbuild@0.23.1": true
+  }
+}
