@@ -2,13 +2,20 @@ import * as vscode from "vscode";
 import { findResxGroups, groupResxFiles } from "./resxParser";
 import { TablePanel } from "./tablePanel";
 import { FileListProvider } from "./fileListProvider";
+import { createMasterResxFile } from "./createMaster";
 
 let lastOpenedUris: vscode.Uri[] | null = null;
 
 async function openTable() {
   const groups = await findResxGroups();
   if (groups.length === 0) {
-    vscode.window.showInformationMessage("Lokalizator: No .resx files found in this workspace.");
+    const choice = await vscode.window.showInformationMessage(
+      "Lokalizator: No .resx files found in this workspace.",
+      "Create master .resx file"
+    );
+    if (choice) {
+      await createMasterResxFile();
+    }
     return;
   }
   lastOpenedUris = null;

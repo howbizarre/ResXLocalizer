@@ -4,6 +4,7 @@ import { detectNeutralLanguage, normalizeToTwoLetters } from "./neutralLanguage"
 import { pickLocale } from "./locales";
 import { buildEmptyResxContent } from "./resxTemplate";
 import { applyFamilyConvention } from "./localeConvention";
+import { createMasterResxFile } from "./createMaster";
 
 const UNKNOWN_MASTER_LABEL = "src";
 
@@ -61,6 +62,8 @@ export class FileListProvider implements vscode.WebviewViewProvider {
           message.masterPath ? String(message.masterPath) : null,
           Array.isArray(message.existing) ? (message.existing as string[]) : []
         );
+      } else if (message?.command === "createMaster") {
+        void this.handleCreateMaster();
       }
     });
     void this.refresh();
@@ -118,6 +121,11 @@ export class FileListProvider implements vscode.WebviewViewProvider {
     const doc = await vscode.workspace.openTextDocument(newFileUri);
     await vscode.window.showTextDocument(doc, { preview: false });
 
+    await this.refresh();
+  }
+
+  private async handleCreateMaster(): Promise<void> {
+    await createMasterResxFile();
     await this.refresh();
   }
 
@@ -207,7 +215,9 @@ export class FileListProvider implements vscode.WebviewViewProvider {
       .join("\n");
 
     const body =
-      uris.length === 0 ? `<p class="empty">No .resx files found in this workspace.</p>` : groupsHtml;
+      uris.length === 0
+        ? `<div class="empty-state"><p>No .resx files found in this workspace.</p><button id="createMasterBtn" class="primary-btn">Create master .resx file</button></div>`
+        : groupsHtml;
 
     return `<!DOCTYPE html>
 <html lang="en">
@@ -221,8 +231,24 @@ export class FileListProvider implements vscode.WebviewViewProvider {
       padding: 6px 8px 16px;
       font-size: 13px;
     }
-    .empty {
+    .empty-state {
+      padding: 8px 4px;
+    }
+    .empty-state p {
       opacity: 0.8;
+      margin: 0 0 10px;
+    }
+    .primary-btn {
+      padding: 6px 12px;
+      border: none;
+      border-radius: 3px;
+      background: var(--vscode-button-background);
+      color: var(--vscode-button-foreground);
+      cursor: pointer;
+      font-size: 13px;
+    }
+    .primary-btn:hover {
+      background: var(--vscode-button-hoverBackground);
     }
     details.group {
       margin-bottom: 4px;
@@ -287,7 +313,7 @@ export class FileListProvider implements vscode.WebviewViewProvider {
       flex-shrink: 0;
       font-family: var(--vscode-editor-font-family, monospace);
       font-size: 10px;
-      font-weight: 700;
+      font-weight: 400;
       letter-spacing: 0.3px;
       text-transform: lowercase;
       padding: 1px 5px;
@@ -370,6 +396,13 @@ export class FileListProvider implements vscode.WebviewViewProvider {
           });
         });
       });
+
+      const createMasterBtn = document.getElementById("createMasterBtn");
+      if (createMasterBtn) {
+        createMasterBtn.addEventListener("click", () => {
+          vscode.postMessage({ command: "createMaster" });
+        });
+      }
     })();
   </script>
 </body>

@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<root>
-  <data name="Greeting" xml:space="preserve">
-    <value>Hallo</value>
-  </data>
-  <data name="Farewell" xml:space="preserve">
-    <value>Auf Wiedersehen</value>
-  </data>
-</root>
