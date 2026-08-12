@@ -26,7 +26,7 @@ export interface ResxGroup {
 
 const RESX_NAME_PATTERN = /^(.*?)(?:\.([a-zA-Z]{2}(?:-[a-zA-Z0-9]+)?))?\.resx$/;
 
-function parseFileName(fileName: string): { baseName: string; locale: string | null } {
+export function parseResxFileName(fileName: string): { baseName: string; locale: string | null } {
   const match = RESX_NAME_PATTERN.exec(fileName);
   if (!match) {
     return { baseName: fileName.replace(/\.resx$/i, ""), locale: null };
@@ -66,7 +66,7 @@ export async function parseResxFile(uri: vscode.Uri): Promise<ResxFile> {
   }
 
   const fileName = uri.path.split("/").pop() ?? "";
-  const { locale } = parseFileName(fileName);
+  const { locale } = parseResxFileName(fileName);
 
   return { uri, locale, entries };
 }
@@ -77,7 +77,7 @@ export async function groupResxFiles(uris: vscode.Uri[]): Promise<ResxGroup[]> {
   for (const uri of uris) {
     const fileName = uri.path.split("/").pop() ?? "";
     const dir = uri.path.slice(0, uri.path.length - fileName.length - 1);
-    const { baseName } = parseFileName(fileName);
+    const { baseName } = parseResxFileName(fileName);
     const groupKey = `${dir}::${baseName}`;
 
     const file = await parseResxFile(uri);

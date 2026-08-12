@@ -29,7 +29,7 @@ function renderGroup(group: ResxGroup): string {
       const cells = group.files
         .map((file) => {
           const entry = file.entries.get(key);
-          const cls = entry ? "" : " class=\"missing\"";
+          const cls = entry && entry.value.trim() !== "" ? "" : " class=\"missing\"";
           return `<td${cls}>${escapeHtml(entry?.value ?? "")}</td>`;
         })
         .join("");

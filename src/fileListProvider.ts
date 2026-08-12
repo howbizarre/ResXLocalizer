@@ -1,5 +1,11 @@
 import * as vscode from "vscode";
-import { findResxFiles } from "./resxParser";
+import { findResxFiles, parseResxFile, parseResxFileName } from "./resxParser";
+import { detectNeutralLanguage, normalizeToTwoLetters } from "./neutralLanguage";
+import { pickLocale } from "./locales";
+import { buildEmptyResxContent } from "./resxTemplate";
+import { applyFamilyConvention } from "./localeConvention";
+
+const UNKNOWN_MASTER_LABEL = "src";
 
 function escapeHtml(text: string): string {
   return text
@@ -18,6 +24,20 @@ function getNonce(): string {
   return text;
 }
 
+interface FileItem {
+  uri: vscode.Uri;
+  fileName: string;
+  label: string;
+  locale: string | null;
+  isMaster: boolean;
+}
+
+interface FamilyGroup {
+  baseName: string;
+  dirUri: vscode.Uri;
+  items: FileItem[];
+}
+
 export class FileListProvider implements vscode.WebviewViewProvider {
   public static readonly viewType = "lokalizator.fileListView";
 
@@ -34,6 +54,13 @@ export class FileListProvider implements vscode.WebviewViewProvider {
         if (uris.length > 0) {
           this.onOpenTable(uris);
         }
+      } else if (message?.command === "addLocale") {
+        void this.handleAddLocale(
+          String(message.dir ?? ""),
+          String(message.baseName ?? ""),
+          message.masterPath ? String(message.masterPath) : null,
+          Array.isArray(message.existing) ? (message.existing as string[]) : []
+        );
       }
     });
     void this.refresh();
@@ -43,27 +70,144 @@ export class FileListProvider implements vscode.WebviewViewProvider {
     if (!this.view) {
       return;
     }
-    const uris = await findResxFiles();
-    uris.sort((a, b) => a.fsPath.localeCompare(b.fsPath));
-    this.view.webview.html = this.renderHtml(uris);
+    const [uris, neutralLanguage] = await Promise.all([findResxFiles(), detectNeutralLanguage()]);
+    this.view.webview.html = this.renderHtml(uris, neutralLanguage);
   }
 
-  private renderHtml(uris: vscode.Uri[]): string {
+  private async handleAddLocale(
+    dirFsPath: string,
+    baseName: string,
+    masterPath: string | null,
+    existingLocales: string[]
+  ): Promise<void> {
+    if (!dirFsPath || !baseName) {
+      return;
+    }
+
+    const exclude = new Set(existingLocales.map((l) => l.toLowerCase()));
+    const pickedLocale = await pickLocale(exclude);
+    if (!pickedLocale) {
+      return;
+    }
+    const locale = applyFamilyConvention(pickedLocale, existingLocales);
+
+    const dirUri = vscode.Uri.file(dirFsPath);
+    const newFileUri = vscode.Uri.joinPath(dirUri, `${baseName}.${locale}.resx`);
+
+    try {
+      await vscode.workspace.fs.stat(newFileUri);
+      vscode.window.showWarningMessage(`Lokalizator: ${baseName}.${locale}.resx already exists.`);
+      return;
+    } catch {
+      // File does not exist yet — safe to create.
+    }
+
+    let keys: string[] = [];
+    if (masterPath) {
+      try {
+        const master = await parseResxFile(vscode.Uri.file(masterPath));
+        keys = Array.from(master.entries.keys());
+      } catch {
+        keys = [];
+      }
+    }
+
+    const content = buildEmptyResxContent(keys);
+    await vscode.workspace.fs.writeFile(newFileUri, Buffer.from(content, "utf8"));
+
+    const doc = await vscode.workspace.openTextDocument(newFileUri);
+    await vscode.window.showTextDocument(doc, { preview: false });
+
+    await this.refresh();
+  }
+
+  private buildTree(
+    uris: vscode.Uri[],
+    neutralLanguage: string | null
+  ): Map<string, Map<string, FamilyGroup>> {
+    const multiRoot = (vscode.workspace.workspaceFolders?.length ?? 0) > 1;
+    const tree = new Map<string, Map<string, FamilyGroup>>();
+
+    for (const uri of uris) {
+      const rel = vscode.workspace.asRelativePath(uri, multiRoot).replace(/\\/g, "/");
+      const slashIdx = rel.lastIndexOf("/");
+      const folder = slashIdx === -1 ? "" : rel.slice(0, slashIdx);
+      const fileName = slashIdx === -1 ? rel : rel.slice(slashIdx + 1);
+      const { baseName, locale } = parseResxFileName(fileName);
+
+      const isMaster = locale === null;
+      const label = isMaster ? neutralLanguage ?? UNKNOWN_MASTER_LABEL : normalizeToTwoLetters(locale);
+
+      const families = tree.get(folder) ?? new Map<string, FamilyGroup>();
+      tree.set(folder, families);
+
+      const family = families.get(baseName) ?? {
+        baseName,
+        dirUri: vscode.Uri.joinPath(uri, ".."),
+        items: []
+      };
+      family.items.push({ uri, fileName, label, locale, isMaster });
+      families.set(baseName, family);
+    }
+
+    for (const families of tree.values()) {
+      for (const family of families.values()) {
+        family.items.sort((a, b) => {
+          if (a.isMaster !== b.isMaster) {
+            return a.isMaster ? -1 : 1;
+          }
+          return a.label.localeCompare(b.label);
+        });
+      }
+    }
+
+    return tree;
+  }
+
+  private renderHtml(uris: vscode.Uri[], neutralLanguage: string | null): string {
     const nonce = getNonce();
     const csp = `default-src 'none'; style-src 'unsafe-inline'; script-src 'nonce-${nonce}';`;
 
-    const items = uris
-      .map((uri) => {
-        const label = escapeHtml(vscode.workspace.asRelativePath(uri, true));
-        const path = escapeHtml(uri.fsPath);
-        return `<label class="item"><input type="checkbox" class="file-checkbox" data-path="${path}" /><span>${label}</span></label>`;
+    const tree = this.buildTree(uris, neutralLanguage);
+    const sortedFolders = Array.from(tree.keys()).sort((a, b) => a.localeCompare(b));
+
+    const groupsHtml = sortedFolders
+      .map((folder) => {
+        const families = tree.get(folder)!;
+        const sortedBaseNames = Array.from(families.keys()).sort((a, b) => a.localeCompare(b));
+
+        const familiesHtml = sortedBaseNames
+          .map((baseName) => {
+            const family = families.get(baseName)!;
+            const master = family.items.find((i) => i.isMaster);
+            const existing = family.items
+              .filter((i) => !i.isMaster && i.locale)
+              .map((i) => escapeHtml(i.locale!))
+              .join(",");
+
+            const itemsHtml = family.items
+              .map((item) => {
+                const path = escapeHtml(item.uri.fsPath);
+                const name = escapeHtml(item.fileName);
+                const badgeClass = item.isMaster ? "locale-badge master" : "locale-badge";
+                const title = item.isMaster ? ' title="Master file"' : "";
+                return `<label class="item"><input type="checkbox" class="file-checkbox" data-path="${path}" data-group="${escapeHtml(folder + "::" + baseName)}" data-master="${item.isMaster}" /><span class="${badgeClass}"${title}>${escapeHtml(item.label)}</span><span class="name">${name}</span></label>`;
+              })
+              .join("\n");
+
+            const addNewHtml = `<div class="add-new" data-dir="${escapeHtml(family.dirUri.fsPath)}" data-base="${escapeHtml(baseName)}" data-master-path="${master ? escapeHtml(master.uri.fsPath) : ""}" data-existing="${existing}"><span class="plus-icon">+</span><span>Add new</span></div>`;
+
+            return `<div class="family"><div class="family-header">${escapeHtml(baseName)}</div>${itemsHtml}\n${addNewHtml}</div>`;
+          })
+          .join("\n");
+
+        const folderLabel = escapeHtml(folder || "(root)");
+        return `<details class="group" open><summary><span class="folder-icon">📁</span>${folderLabel}</summary><div class="group-items">${familiesHtml}</div></details>`;
       })
       .join("\n");
 
     const body =
-      uris.length === 0
-        ? `<p class="empty">No .resx files found in this workspace.</p>`
-        : `<div id="list">${items}</div><button id="editBtn">Edit</button>`;
+      uris.length === 0 ? `<p class="empty">No .resx files found in this workspace.</p>` : groupsHtml;
 
     return `<!DOCTYPE html>
 <html lang="en">
@@ -74,40 +218,116 @@ export class FileListProvider implements vscode.WebviewViewProvider {
     body {
       font-family: var(--vscode-font-family);
       color: var(--vscode-foreground);
-      padding: 8px;
+      padding: 6px 8px 16px;
       font-size: 13px;
     }
     .empty {
       opacity: 0.8;
     }
-    .item {
+    details.group {
+      margin-bottom: 4px;
+    }
+    details.group summary {
+      list-style: none;
+      cursor: pointer;
+      padding: 4px 2px;
+      font-weight: 600;
+      opacity: 0.85;
       display: flex;
-      align-items: flex-start;
+      align-items: center;
       gap: 6px;
-      padding: 3px 0;
-      cursor: pointer;
-      word-break: break-all;
+      user-select: none;
     }
-    .item input {
-      margin-top: 2px;
-      flex-shrink: 0;
-    }
-    button {
-      margin-top: 12px;
-      width: 100%;
-      padding: 6px;
-      background: var(--vscode-button-background);
-      color: var(--vscode-button-foreground);
-      border: none;
-      border-radius: 2px;
-      cursor: pointer;
+    details.group summary::-webkit-details-marker {
       display: none;
     }
-    button.visible {
-      display: block;
+    details.group summary:before {
+      content: "▸";
+      display: inline-block;
+      transition: transform 0.1s ease;
+      font-weight: normal;
+      opacity: 0.7;
     }
-    button:hover {
-      background: var(--vscode-button-hoverBackground);
+    details.group[open] summary:before {
+      transform: rotate(90deg);
+    }
+    .folder-icon {
+      opacity: 0.9;
+    }
+    .group-items {
+      padding-left: 6px;
+      border-left: 1px solid var(--vscode-panel-border);
+      margin-left: 8px;
+    }
+    .family {
+      margin: 2px 0 8px;
+    }
+    .family-header {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      opacity: 0.6;
+      padding: 2px 4px;
+    }
+    .item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 4px;
+      border-radius: 3px;
+      cursor: pointer;
+    }
+    .item:hover {
+      background: var(--vscode-list-hoverBackground);
+    }
+    .item input {
+      flex-shrink: 0;
+    }
+    .locale-badge {
+      flex-shrink: 0;
+      font-family: var(--vscode-editor-font-family, monospace);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+      text-transform: lowercase;
+      padding: 1px 5px;
+      border-radius: 3px;
+      min-width: 20px;
+      text-align: center;
+      background: var(--vscode-badge-background);
+      color: var(--vscode-badge-foreground);
+    }
+    .locale-badge.master {
+      background: var(--vscode-charts-blue, var(--vscode-badge-background));
+    }
+    .name {
+      word-break: break-all;
+    }
+    .add-new {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 4px;
+      margin-top: 2px;
+      border-radius: 3px;
+      cursor: pointer;
+      opacity: 0.75;
+    }
+    .add-new:hover {
+      opacity: 1;
+      background: var(--vscode-list-hoverBackground);
+    }
+    .plus-icon {
+      flex-shrink: 0;
+      width: 16px;
+      height: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      border: 1px solid currentColor;
+      font-size: 11px;
+      line-height: 1;
     }
   </style>
 </head>
@@ -117,19 +337,38 @@ export class FileListProvider implements vscode.WebviewViewProvider {
     (function () {
       const vscode = acquireVsCodeApi();
       const checkboxes = Array.from(document.querySelectorAll(".file-checkbox"));
-      const btn = document.getElementById("editBtn");
-      if (!btn) return;
 
-      function updateButton() {
-        const checkedCount = checkboxes.filter((c) => c.checked).length;
-        btn.classList.toggle("visible", checkedCount > 1);
+      function sendSelection() {
+        const paths = checkboxes.filter((c) => c.checked).map((c) => c.dataset.path);
+        if (paths.length === 0) return;
+        vscode.postMessage({ command: "openTable", paths });
       }
 
-      checkboxes.forEach((cb) => cb.addEventListener("change", updateButton));
+      checkboxes.forEach((cb) => {
+        cb.addEventListener("change", () => {
+          if (cb.checked && cb.dataset.master !== "true") {
+            const master = checkboxes.find(
+              (c) => c.dataset.group === cb.dataset.group && c.dataset.master === "true"
+            );
+            if (master && !master.checked) {
+              master.checked = true;
+            }
+          }
+          sendSelection();
+        });
+      });
 
-      btn.addEventListener("click", () => {
-        const paths = checkboxes.filter((c) => c.checked).map((c) => c.dataset.path);
-        vscode.postMessage({ command: "openTable", paths });
+      document.querySelectorAll(".add-new").forEach((el) => {
+        el.addEventListener("click", () => {
+          const existing = (el.dataset.existing || "").split(",").filter(Boolean);
+          vscode.postMessage({
+            command: "addLocale",
+            dir: el.dataset.dir,
+            baseName: el.dataset.base,
+            masterPath: el.dataset.masterPath || null,
+            existing
+          });
+        });
       });
     })();
   </script>
