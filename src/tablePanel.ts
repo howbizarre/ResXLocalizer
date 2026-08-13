@@ -4,6 +4,9 @@ import { renderTableHtml } from "./renderTable";
 
 export class TablePanel {
   public static currentPanel: TablePanel | undefined;
+  private static readonly closeEmitter = new vscode.EventEmitter<void>();
+  public static readonly onDidClose = TablePanel.closeEmitter.event;
+
   private readonly panel: vscode.WebviewPanel;
   private disposables: vscode.Disposable[] = [];
 
@@ -37,5 +40,6 @@ export class TablePanel {
   public dispose() {
     TablePanel.currentPanel = undefined;
     this.disposables.forEach((d) => d.dispose());
+    TablePanel.closeEmitter.fire();
   }
 }

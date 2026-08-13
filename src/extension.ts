@@ -48,6 +48,10 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand("lokalizator.refreshTable", () => {
       void fileListProvider.refresh();
       void refreshOpenTable();
+    }),
+    TablePanel.onDidClose(() => {
+      lastOpenedUris = null;
+      fileListProvider.clearSelection();
     })
   );
 

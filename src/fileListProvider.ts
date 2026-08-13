@@ -77,6 +77,10 @@ export class FileListProvider implements vscode.WebviewViewProvider {
     this.view.webview.html = this.renderHtml(uris, neutralLanguage);
   }
 
+  public clearSelection(): void {
+    void this.view?.webview.postMessage({ command: "clearSelection" });
+  }
+
   private async handleAddLocale(
     dirFsPath: string,
     baseName: string,
@@ -382,6 +386,14 @@ export class FileListProvider implements vscode.WebviewViewProvider {
           }
           sendSelection();
         });
+      });
+
+      window.addEventListener("message", (event) => {
+        if (event.data?.command === "clearSelection") {
+          checkboxes.forEach((cb) => {
+            cb.checked = false;
+          });
+        }
       });
 
       document.querySelectorAll(".add-new").forEach((el) => {
