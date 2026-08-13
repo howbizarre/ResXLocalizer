@@ -126,7 +126,7 @@ export function renderTableHtml(groups: ResxGroup[]): string {
     th, td {
       padding: 12px 14px;
       text-align: left;
-      vertical-align: top;
+      vertical-align: middle;
       word-break: break-word;
       border-bottom: 1px solid var(--vscode-panel-border);
     }
@@ -243,10 +243,9 @@ export function renderTableHtml(groups: ResxGroup[]): string {
       border-color: color-mix(in srgb, var(--vscode-charts-green, #3fb950) 35%, transparent);
     }
     .icon-btn-delete {
-      color: var(--vscode-descriptionForeground);
+      color: var(--vscode-errorForeground, #f14c4c);
     }
     .icon-btn-delete:hover {
-      color: var(--vscode-errorForeground, #f14c4c);
       background: color-mix(in srgb, var(--vscode-errorForeground, #f14c4c) 16%, transparent);
       border-color: color-mix(in srgb, var(--vscode-errorForeground, #f14c4c) 35%, transparent);
     }
