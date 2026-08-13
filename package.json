@@ -4,8 +4,26 @@
   "description": "Visualize .resx localization resources as a key/language table.",
   "version": "1.0.1",
   "publisher": "kosta",
-  "private": true,
   "license": "CC-BY-NC-SA-4.0",
+  "icon": "media/marketplace-icon.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/howbizarre/ResXLocalizer.git"
+  },
+  "bugs": {
+    "url": "https://github.com/howbizarre/ResXLocalizer/issues"
+  },
+  "homepage": "https://github.com/howbizarre/ResXLocalizer#readme",
+  "keywords": [
+    "resx",
+    "localization",
+    "l10n",
+    "i18n",
+    "translation",
+    "resource",
+    ".net",
+    "csharp"
+  ],
   "engines": {
     "vscode": "^1.90.0"
   },

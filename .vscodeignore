@@ -8,3 +8,5 @@ eslint.config.mjs
 **/*.map
 **/*.ts
 node_modules/**
+locals/**
+media/screenshots/**
