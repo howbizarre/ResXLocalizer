@@ -160,27 +160,38 @@ Under every column header (except Actions) there's a **Filter...** field — typ
 
 ## Exporting and importing
 
-Two buttons sit above each table, at the top right: **⬇ Export** and **⬆ Import**.
+Two buttons sit above every table, at the top right, level with the table's title — a green **Import** button (↓ icon) and a blue **Export** button (↑ icon):
+
+![Export and Import buttons above a translation table](media/screenshots/table-view.png)
 
 ### Export
 
-Click **Export**, choose **CSV** or **JSON**, then pick where to save it. The file contains one row per key, with a column per language (the base file's column is called `default`) — the same shape you see in the table.
+1. Click **Export**.
+2. Choose **CSV** or **JSON** from the small picker that pops up.
+3. Pick where to save the file.
+
+The exported file has one row per key, with a column per language (the base/default file's column is simply called `default`) — the exact same shape you see in the table. You can open it in Excel, Google Sheets, or hand it to a translation agency that doesn't use VS Code at all.
 
 ### Import
 
-Click **Import** and pick a `.csv` or `.json` file. Before anything is written to your `.resx` files, the extension validates the file:
+1. Click **Import**.
+2. Pick a `.csv` or `.json` file — it doesn't have to come from this extension's own Export; any file with a `Key` column/field and matching language columns works.
 
-- the file must parse correctly (valid CSV/JSON), with a `Key` column/field on every row;
-- if any row is malformed or missing its key, the import is **rejected entirely** — a dialog lists the problems found, and nothing gets changed.
+Before anything is written to your `.resx` files, the file is **validated**:
+
+- it must parse correctly (valid CSV/JSON), with a `Key` column/field present on every row;
+- if any row is malformed or missing its key, the import is **rejected entirely** — a dialog lists every problem found, and nothing gets changed on disk.
 
 Once validation passes:
 
 - rows with a **key that doesn't exist yet** are added as new translations;
-- rows with a **key that already exists** overwrite the existing value for that language — this is logged;
-- blank cells are skipped (they never erase an existing translation);
-- columns that don't match any language file open in this table are ignored.
+- rows with a **key that already exists** overwrite the existing value for that language — every such overwrite is recorded in a log;
+- blank cells are skipped (an empty cell never erases an existing translation);
+- columns that don't match any language file open in this table are simply ignored.
 
-If any existing values were overwritten, a **new tab opens automatically** right after the import finishes, listing every overwritten key with its old and new value side by side, so you can review exactly what changed.
+If any existing values were overwritten, a **new tab opens automatically** right after the import finishes, listing every overwritten key with its old and new value side by side — plus any warnings (e.g. a key repeated inside the imported file) — so you can review exactly what changed before trusting the result:
+
+![Import log tab listing overwritten keys with old and new values](media/screenshots/import-log.png)
 
 ---
 
