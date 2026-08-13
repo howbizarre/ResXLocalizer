@@ -41,7 +41,7 @@ function renderGroup(group: ResxGroup): string {
   const addRowValueCells = group.files
     .map((file) => `<td class="value-cell" data-file="${escapeHtml(file.uri.fsPath)}"></td>`)
     .join("");
-  const addRow = `<tr class="add-row"><td class="action-col"><button class="add-toggle" data-editing="false" title="Edit row"><span class="icon-slot"></span></button></td><td class="key add-key" data-placeholder="New key"></td>${addRowValueCells}</tr>`;
+  const addRow = `<tr class="add-row"><td class="action-col"><button class="icon-btn add-toggle" data-editing="false" title="Edit row"><span class="icon-slot"></span></button></td><td class="key add-key" data-placeholder="New key"></td>${addRowValueCells}</tr>`;
 
   const rows = sortedKeys
     .map((key) => {
@@ -53,16 +53,21 @@ function renderGroup(group: ResxGroup): string {
           return `<td class="${cls}" data-col="${i + 1}" data-file="${filePath}" data-key="${escapeHtml(key)}">${escapeHtml(entry?.value ?? "")}</td>`;
         })
         .join("");
-      return `<tr data-key="${escapeHtml(key)}"><td class="action-col"><button class="row-edit-toggle" data-editing="false" title="Edit row"><span class="icon-slot"></span></button><button class="row-delete" title="Delete row"><span class="icon-slot"></span></button></td><td class="key" data-col="0">${escapeHtml(key)}</td>${cells}</tr>`;
+      return `<tr data-key="${escapeHtml(key)}"><td class="action-col"><button class="icon-btn icon-btn-edit row-edit-toggle" data-editing="false" title="Edit row"><span class="icon-slot"></span></button><button class="icon-btn icon-btn-delete row-delete" title="Delete row"><span class="icon-slot"></span></button></td><td class="key" data-col="0">${escapeHtml(key)}</td>${cells}</tr>`;
     })
     .join("\n");
 
   return `
-  <h2>${escapeHtml(group.baseName)}</h2>
+  <div class="group-header">
+    <h2>${escapeHtml(group.baseName)}</h2>
+    <span class="group-meta">${sortedKeys.length} keys &middot; ${locales.length} locales</span>
+  </div>
+  <div class="table-wrapper">
   <table>
-    <thead><tr><th class="action-col">Actions</th><th><div class="col-header"><span class="col-label">Key</span><input type="text" class="col-filter" data-col="0" placeholder="Filter" /></div></th>${headerCells}</tr></thead>
+    <thead><tr><th class="action-col">Actions</th><th><div class="col-header"><span class="col-label">Key</span><input type="text" class="col-filter" data-col="0" placeholder="Filter…" /></div></th>${headerCells}</tr></thead>
     <tbody>${addRow}\n${rows}</tbody>
-  </table>`;
+  </table>
+  </div>`;
 }
 
 export function renderTableHtml(groups: ResxGroup[]): string {
@@ -81,40 +86,72 @@ export function renderTableHtml(groups: ResxGroup[]): string {
   <meta charset="UTF-8" />
   <meta http-equiv="Content-Security-Policy" content="${csp}" />
   <style>
+    * {
+      box-sizing: border-box;
+    }
     body {
       font-family: var(--vscode-font-family);
       color: var(--vscode-foreground);
-      padding: 0 12px 32px;
+      padding: 4px 20px 40px;
+      font-size: 14px;
+    }
+    .group-header {
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+      margin-top: 28px;
+      margin-bottom: 14px;
     }
     h2 {
-      font-weight: 600;
-      margin-top: 24px;
-      margin-bottom: 6px;
-      font-size: 13px;
-      text-transform: uppercase;
-      opacity: 0.8;
+      font-weight: 650;
+      margin: 0;
+      font-size: 17px;
+      letter-spacing: 0.1px;
+    }
+    .group-meta {
+      font-size: 12px;
+      opacity: 0.6;
+    }
+    .table-wrapper {
+      border: 1px solid var(--vscode-panel-border);
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
     }
     table {
       border-collapse: collapse;
       width: 100%;
-      font-size: 12px;
+      font-size: 13.5px;
     }
     th, td {
-      border: 1px solid var(--vscode-panel-border);
-      padding: 4px 6px;
+      padding: 12px 14px;
       text-align: left;
       vertical-align: top;
       word-break: break-word;
+      border-bottom: 1px solid var(--vscode-panel-border);
     }
     th {
       background: var(--vscode-editorGroupHeader-tabsBackground);
       position: sticky;
       top: 0;
+      z-index: 1;
+      font-size: 11.5px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      opacity: 0.75;
+      padding-top: 10px;
+      padding-bottom: 10px;
+    }
+    tbody tr[data-key]:hover {
+      background: color-mix(in srgb, var(--vscode-list-hoverBackground, var(--vscode-editor-selectionBackground)) 60%, transparent);
+    }
+    tbody tr:last-child td {
+      border-bottom: none;
     }
     .col-header {
       display: flex;
       align-items: center;
-      gap: 4px;
+      gap: 8px;
     }
     .col-label {
       flex-shrink: 0;
@@ -125,12 +162,13 @@ export function renderTableHtml(groups: ResxGroup[]): string {
       min-width: 0;
       width: 100%;
       box-sizing: border-box;
-      font-size: 11px;
+      font-size: 12px;
       font-weight: normal;
       text-transform: none;
-      padding: 2px 4px;
+      letter-spacing: normal;
+      padding: 6px 10px;
       border: 1px solid var(--vscode-input-border, transparent);
-      border-radius: 2px;
+      border-radius: 999px;
       background: var(--vscode-input-background);
       color: var(--vscode-input-foreground);
     }
@@ -143,14 +181,15 @@ export function renderTableHtml(groups: ResxGroup[]): string {
     }
     td.key {
       font-family: var(--vscode-editor-font-family, monospace);
+      font-weight: 600;
     }
     td.missing {
       color: var(--vscode-errorForeground, #f14c4c);
-      background: var(--vscode-inputValidation-errorBackground, rgba(244, 135, 113, 0.15));
-      border-color: var(--vscode-inputValidation-errorBorder, #f14c4c);
+      background: color-mix(in srgb, var(--vscode-errorForeground, #f14c4c) 10%, transparent);
+      box-shadow: inset 3px 0 0 var(--vscode-errorForeground, #f14c4c);
     }
     tr.add-row {
-      background: var(--vscode-editor-inactiveSelectionBackground, transparent);
+      background: color-mix(in srgb, var(--vscode-charts-blue, var(--vscode-focusBorder)) 8%, transparent);
     }
     tr.add-row td.value-cell,
     tr.add-row td.key {
@@ -158,7 +197,7 @@ export function renderTableHtml(groups: ResxGroup[]): string {
     }
     .add-key:empty:before {
       content: attr(data-placeholder);
-      opacity: 0.5;
+      opacity: 0.55;
       pointer-events: none;
     }
     .add-key.invalid {
@@ -166,37 +205,54 @@ export function renderTableHtml(groups: ResxGroup[]): string {
       background: var(--vscode-inputValidation-errorBackground, rgba(244, 135, 113, 0.15));
     }
     .action-col {
-      width: 54px;
+      width: 88px;
       white-space: nowrap;
       text-align: center;
-      padding: 2px 4px;
+      padding: 8px 6px;
     }
-    .add-toggle,
-    .row-edit-toggle,
-    .row-delete {
-      border: none;
+    .icon-btn {
+      border: 1px solid transparent;
       background: transparent;
       color: var(--vscode-foreground);
       cursor: pointer;
-      padding: 3px;
-      border-radius: 3px;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
       display: inline-flex;
       align-items: center;
       justify-content: center;
+      vertical-align: middle;
+      transition: background-color 0.12s ease, border-color 0.12s ease, transform 0.06s ease;
     }
-    .add-toggle:hover,
-    .row-edit-toggle:hover,
-    .row-delete:hover {
-      background: var(--vscode-toolbar-hoverBackground);
+    .icon-btn:active {
+      transform: scale(0.92);
     }
-    .row-delete:hover {
+    .icon-btn-edit,
+    .add-toggle {
+      color: var(--vscode-charts-blue, var(--vscode-textLink-foreground));
+    }
+    .icon-btn-edit:hover,
+    .add-toggle:hover {
+      background: color-mix(in srgb, var(--vscode-charts-blue, var(--vscode-textLink-foreground)) 16%, transparent);
+      border-color: color-mix(in srgb, var(--vscode-charts-blue, var(--vscode-textLink-foreground)) 35%, transparent);
+    }
+    .icon-btn-edit[data-editing="true"],
+    .add-toggle[data-editing="true"] {
+      color: var(--vscode-charts-green, #3fb950);
+      background: color-mix(in srgb, var(--vscode-charts-green, #3fb950) 16%, transparent);
+      border-color: color-mix(in srgb, var(--vscode-charts-green, #3fb950) 35%, transparent);
+    }
+    .icon-btn-delete {
+      color: var(--vscode-descriptionForeground);
+    }
+    .icon-btn-delete:hover {
       color: var(--vscode-errorForeground, #f14c4c);
+      background: color-mix(in srgb, var(--vscode-errorForeground, #f14c4c) 16%, transparent);
+      border-color: color-mix(in srgb, var(--vscode-errorForeground, #f14c4c) 35%, transparent);
     }
-    .add-toggle svg,
-    .row-edit-toggle svg,
-    .row-delete svg {
-      width: 13px;
-      height: 13px;
+    .icon-btn svg {
+      width: 17px;
+      height: 17px;
       pointer-events: none;
     }
     tr.editing td.value-cell {
@@ -207,6 +263,7 @@ export function renderTableHtml(groups: ResxGroup[]): string {
       outline-offset: -1px;
       background: var(--vscode-input-background);
       color: var(--vscode-input-foreground);
+      border-radius: 4px;
     }
   </style>
 </head>
