@@ -1,3 +1,10 @@
+/**
+ * @module resx/resxTemplate
+ * Builds the XML for brand-new `.resx` files (same schema Visual Studio generates).
+ * Used by {@link ../resx/createMaster} (new master file) and the sidebar's "Add new" locale action.
+ */
+
+/** Escapes the characters that are unsafe inside `.resx` XML text content/attributes. */
 export function escapeXml(text: string): string {
   return text
     .replace(/&/g, "&amp;")

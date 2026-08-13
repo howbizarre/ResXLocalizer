@@ -250,6 +250,8 @@ code --install-extension resxlocalizer-0.0.1.vsix
 - `npm run package` — production build (извиква се от `vscode:prepublish`).
 - `npm run vsix` — пакетира разширението в `.vsix` файл (`@vscode/vsce`).
 
+За карта на самия код (структура по папки, поток на данните, конвенции, които е добре да знаеш преди да пипаш нещо), виж [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — полезно както за контрибютори, така и за AI coding агенти.
+
 ---
 
 ## Roadmap

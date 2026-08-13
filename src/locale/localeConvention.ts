@@ -1,3 +1,10 @@
+/**
+ * @module locale/localeConvention
+ * Makes a newly-added locale code match the naming style already used by its siblings
+ * (e.g. `de-DE` vs `de`), so "Add new" ({@link ../panels/fileListProvider}) doesn't produce
+ * an inconsistently-named file within an existing `.resx` family.
+ */
+
 // Default region for a bare language code, used only when sibling files in the family
 // already use region-qualified culture names (e.g. "de-DE") and we need to match that style.
 const LANGUAGE_TO_REGION: Record<string, string> = {

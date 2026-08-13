@@ -1,5 +1,10 @@
+/**
+ * @module panels/importLogPanel
+ * A one-shot, read-only report panel opened by {@link ../panels/tablePanel} right after an
+ * import that overwrote existing values, so the user can review exactly what changed.
+ */
 import * as vscode from "vscode";
-import { ImportLogEntry } from "./exportImport";
+import { ImportLogEntry } from "../resx/exportImport";
 
 function escapeHtml(text: string): string {
   return text

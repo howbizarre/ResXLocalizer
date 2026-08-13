@@ -1,10 +1,17 @@
+/**
+ * @module locale/locales
+ * The "Add new" locale picker used by the sidebar ({@link ../panels/fileListProvider}) when
+ * creating a new `.resx` variant for an existing file family.
+ */
 import * as vscode from "vscode";
 
+/** One entry in the common-languages list offered by {@link pickLocale}. */
 export interface LocaleOption {
   code: string;
   name: string;
 }
 
+/** ISO language codes offered by default in the "Add new" locale picker, before free typing. */
 export const COMMON_LOCALES: LocaleOption[] = [
   { code: "en", name: "English" },
   { code: "bg", name: "Bulgarian" },
@@ -46,6 +53,12 @@ export const COMMON_LOCALES: LocaleOption[] = [
 
 const LOCALE_CODE_PATTERN = /^[a-zA-Z]{2}(-[a-zA-Z0-9]+)?$/;
 
+/**
+ * Shows a `QuickPick` of {@link COMMON_LOCALES} (already-used locales filtered out), and also
+ * accepts a free-typed custom code (e.g. `pt-BR`) matching {@link LOCALE_CODE_PATTERN}.
+ * @param exclude Locale codes (lowercase) to hide from the list, since they already exist in this family.
+ * @returns The chosen/typed locale code, or `undefined` if the picker was dismissed.
+ */
 export async function pickLocale(exclude: Set<string>): Promise<string | undefined> {
   return new Promise((resolve) => {
     const baseItems: vscode.QuickPickItem[] = COMMON_LOCALES.filter(

@@ -1,3 +1,9 @@
+/**
+ * @module resx/resxParser
+ * Reads `.resx` files from disk and groups them into {@link ResxGroup}s (one master file
+ * plus its per-language variants). This is the only module that parses `.resx` XML into
+ * in-memory data; {@link ../resx/saveTranslations} is the counterpart that writes it back out.
+ */
 import * as vscode from "vscode";
 import { XMLParser } from "fast-xml-parser";
 
@@ -26,6 +32,11 @@ export interface ResxGroup {
 
 const RESX_NAME_PATTERN = /^(.*?)(?:\.([a-zA-Z]{2}(?:-[a-zA-Z0-9]+)?))?\.resx$/;
 
+/**
+ * Splits a `.resx` file name into its base name and locale, per .NET's resource-naming
+ * convention (`Strings.resx` = neutral, `Strings.bg.resx` / `Strings.de-DE.resx` = variants).
+ * @param fileName File name only (no directory path), e.g. `"Strings.bg.resx"`.
+ */
 export function parseResxFileName(fileName: string): { baseName: string; locale: string | null } {
   const match = RESX_NAME_PATTERN.exec(fileName);
   if (!match) {
@@ -35,10 +46,12 @@ export function parseResxFileName(fileName: string): { baseName: string; locale:
   return { baseName, locale: locale ?? null };
 }
 
+/** Finds every `.resx` file in the current workspace (excluding `node_modules`). */
 export async function findResxFiles(): Promise<vscode.Uri[]> {
   return vscode.workspace.findFiles("**/*.resx", "**/node_modules/**");
 }
 
+/** Reads and parses a single `.resx` file into its key/value entries. */
 export async function parseResxFile(uri: vscode.Uri): Promise<ResxFile> {
   const bytes = await vscode.workspace.fs.readFile(uri);
   const xml = Buffer.from(bytes).toString("utf8");
@@ -71,6 +84,11 @@ export async function parseResxFile(uri: vscode.Uri): Promise<ResxFile> {
   return { uri, locale, entries };
 }
 
+/**
+ * Parses the given `.resx` files and groups them by directory + base name, so each
+ * {@link ResxGroup} in the result represents one "family" (master file + its translations),
+ * ready to be handed to the table webview.
+ */
 export async function groupResxFiles(uris: vscode.Uri[]): Promise<ResxGroup[]> {
   const groups = new Map<string, ResxGroup>();
 
@@ -102,6 +120,7 @@ export async function groupResxFiles(uris: vscode.Uri[]): Promise<ResxGroup[]> {
   return Array.from(groups.values()).sort((a, b) => a.baseName.localeCompare(b.baseName));
 }
 
+/** Convenience wrapper: finds every `.resx` file in the workspace and groups them. */
 export async function findResxGroups(): Promise<ResxGroup[]> {
   return groupResxFiles(await findResxFiles());
 }

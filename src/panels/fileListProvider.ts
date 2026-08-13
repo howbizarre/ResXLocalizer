@@ -1,10 +1,18 @@
+/**
+ * @module panels/fileListProvider
+ * Owns the sidebar's `WebviewView` (the Activity Bar tree of `.resx` files). Builds its own
+ * HTML inline (unlike {@link ../panels/tablePanel}, which delegates to a separate render
+ * module) since the tree is small and specific to this one view. Handles checkbox selection
+ * (opens a table via the callback passed to its constructor), "Add new" locale, and the
+ * empty-state "Create master .resx file" button.
+ */
 import * as vscode from "vscode";
-import { findResxFiles, parseResxFile, parseResxFileName } from "./resxParser";
-import { detectNeutralLanguage, normalizeToTwoLetters } from "./neutralLanguage";
-import { pickLocale } from "./locales";
-import { buildEmptyResxContent } from "./resxTemplate";
-import { applyFamilyConvention } from "./localeConvention";
-import { createMasterResxFile } from "./createMaster";
+import { findResxFiles, parseResxFile, parseResxFileName } from "../resx/resxParser";
+import { detectNeutralLanguage, normalizeToTwoLetters } from "../locale/neutralLanguage";
+import { pickLocale } from "../locale/locales";
+import { buildEmptyResxContent } from "../resx/resxTemplate";
+import { applyFamilyConvention } from "../locale/localeConvention";
+import { createMasterResxFile } from "../resx/createMaster";
 
 const UNKNOWN_MASTER_LABEL = "src";
 
@@ -44,8 +52,10 @@ export class FileListProvider implements vscode.WebviewViewProvider {
 
   private view: vscode.WebviewView | undefined;
 
+  /** @param onOpenTable Called with the checked file URIs whenever the user should see them in a table. */
   constructor(private readonly onOpenTable: (uris: vscode.Uri[]) => void) {}
 
+  /** VS Code calls this once when the sidebar view is first shown; wires messages and does the initial render. */
   public resolveWebviewView(webviewView: vscode.WebviewView): void {
     this.view = webviewView;
     webviewView.webview.options = { enableScripts: true };
@@ -69,6 +79,7 @@ export class FileListProvider implements vscode.WebviewViewProvider {
     void this.refresh();
   }
 
+  /** Re-scans the workspace for `.resx` files and re-renders the tree. */
   public async refresh(): Promise<void> {
     if (!this.view) {
       return;
@@ -77,6 +88,7 @@ export class FileListProvider implements vscode.WebviewViewProvider {
     this.view.webview.html = this.renderHtml(uris, neutralLanguage);
   }
 
+  /** Clears the checkbox for the given file paths — called when their table tab gets closed. */
   public uncheckFiles(paths: string[]): void {
     if (paths.length === 0) {
       return;

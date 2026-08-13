@@ -250,6 +250,10 @@ For anyone building or maintaining ResXLocalizer itself:
 - `npm run package` — production build (invoked by `vscode:prepublish`).
 - `npm run vsix` — package the extension into a `.vsix` file (`@vscode/vsce`).
 
+For a map of the source code itself (folder layout, data flow, conventions worth knowing before
+changing something), see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — useful for contributors
+and AI coding agents alike.
+
 ---
 
 ## Roadmap

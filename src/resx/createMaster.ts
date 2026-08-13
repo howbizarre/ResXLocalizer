@@ -1,3 +1,8 @@
+/**
+ * @module resx/createMaster
+ * The "no `.resx` files yet" bootstrap flow, invoked from the empty-state button in both
+ * the command palette ({@link ../extension}) and the sidebar ({@link ../panels/fileListProvider}).
+ */
 import * as vscode from "vscode";
 import { buildEmptyResxContent } from "./resxTemplate";
 

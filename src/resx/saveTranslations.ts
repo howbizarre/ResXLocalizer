@@ -1,6 +1,13 @@
+/**
+ * @module resx/saveTranslations
+ * Writes key/value edits back into existing `.resx` files via targeted regex patches,
+ * rather than re-serializing the whole XML document — this is what preserves each file's
+ * existing comments/formatting. The counterpart to {@link ../resx/resxParser} (which reads).
+ */
 import * as vscode from "vscode";
 import { escapeXml } from "./resxTemplate";
 
+/** One `key` → `value` write, targeting a specific `.resx` file (`file` is an fsPath). */
 export interface TranslationEdit {
   file: string;
   key: string;

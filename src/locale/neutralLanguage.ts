@@ -1,5 +1,12 @@
+/**
+ * @module locale/neutralLanguage
+ * Detects the .NET project's declared "neutral" (master) language, so the sidebar
+ * ({@link ../panels/fileListProvider}) can label the base `.resx` file with a real language
+ * code (e.g. `en`) instead of the generic "src" fallback.
+ */
 import * as vscode from "vscode";
 
+/** Reduces a culture code like `en-US` or `en_GB` down to its bare 2-letter language part. */
 function normalizeToTwoLetters(code: string): string {
   return code.split(/[-_]/)[0].toLowerCase().slice(0, 2);
 }

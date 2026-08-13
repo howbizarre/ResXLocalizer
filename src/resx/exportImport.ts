@@ -1,3 +1,10 @@
+/**
+ * @module resx/exportImport
+ * Pure data-shaping logic for the table's Export/Import buttons: no `vscode` calls, no I/O —
+ * {@link ../panels/tablePanel} owns the actual file dialogs and disk access, and calls into
+ * this module to build file content, validate uploads, and turn parsed rows into
+ * {@link TranslationEdit}s that {@link ../resx/saveTranslations} can apply.
+ */
 import { ResxGroup } from "./resxParser";
 import { TranslationEdit } from "./saveTranslations";
 
@@ -22,6 +29,7 @@ function sortedGroupKeys(group: ResxGroup): string[] {
   return Array.from(allKeys).sort((a, b) => a.localeCompare(b));
 }
 
+/** Serializes a group's current table data to CSV: a `Key` column plus one column per language. */
 export function buildCsvContent(group: ResxGroup): string {
   const header = ["Key", ...group.files.map((f) => columnKey(f.locale))];
   const lines = [header.map(csvEscapeField).join(",")];
@@ -34,6 +42,7 @@ export function buildCsvContent(group: ResxGroup): string {
   return lines.join("\r\n") + "\r\n";
 }
 
+/** Serializes a group's current table data to JSON: one object per key, `Key` + one field per language. */
 export function buildJsonContent(group: ResxGroup): string {
   const rows = sortedGroupKeys(group).map((key) => {
     const row: Record<string, string> = { Key: key };
@@ -51,6 +60,7 @@ export interface ImportRow {
   values: Map<string, string>;
 }
 
+/** Result of validating + parsing an import file, before it's turned into an {@link ImportPlan}. */
 export interface ImportParseResult {
   rows: ImportRow[];
   /** Structural problems — if non-empty, the import must be aborted without writing anything. */
@@ -204,7 +214,10 @@ function parseJsonImport(text: string): ImportParseResult {
   return { rows, errors, warnings };
 }
 
-/** Validates and parses an import file. Callers must not write anything if `errors` is non-empty. */
+/**
+ * Validates and parses an import file. Format (CSV vs JSON) is inferred from `fileName`'s
+ * extension. Callers must not write anything if the result's `errors` array is non-empty.
+ */
 export function parseImportContent(fileName: string, text: string): ImportParseResult {
   const lower = fileName.toLowerCase();
   if (lower.endsWith(".json")) {
@@ -216,6 +229,7 @@ export function parseImportContent(fileName: string, text: string): ImportParseR
   return { rows: [], errors: [`Unsupported file type: "${fileName}". Expected a .csv or .json file.`], warnings: [] };
 }
 
+/** One (key, column) write an import will make — `action` records whether it's new or an overwrite. */
 export interface ImportLogEntry {
   key: string;
   column: string;
@@ -225,9 +239,11 @@ export interface ImportLogEntry {
   newValue: string;
 }
 
+/** The concrete result of {@link buildImportPlan}: edits ready for `saveTranslations`, plus a log for review. */
 export interface ImportPlan {
   edits: TranslationEdit[];
   log: ImportLogEntry[];
+  /** Column names from the import file that didn't match any language file in this group. */
   ignoredColumns: string[];
 }
 

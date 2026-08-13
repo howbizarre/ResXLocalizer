@@ -1,4 +1,11 @@
-import { ResxGroup } from "./resxParser";
+/**
+ * @module webview/renderTable
+ * Builds the self-contained HTML/CSS/JS for the main translation-table webview — the pure
+ * "view" half of {@link ../panels/tablePanel}, which owns the actual `WebviewPanel` and reacts
+ * to the `postMessage` events this markup sends (save/delete/addKey/export/import).
+ * No `vscode` API is used here; everything runs inside the sandboxed webview instead.
+ */
+import { ResxGroup } from "../resx/resxParser";
 
 function escapeHtml(text: string): string {
   return text
@@ -76,6 +83,10 @@ function renderGroup(group: ResxGroup): string {
   </div>`;
 }
 
+/**
+ * Renders the full HTML document for a table webview panel — one `<section>`-like block
+ * per group (in practice {@link ../panels/tablePanel} always passes exactly one).
+ */
 export function renderTableHtml(groups: ResxGroup[]): string {
   if (groups.length === 0) {
     return `<!DOCTYPE html><html><body style="font-family: var(--vscode-font-family); color: var(--vscode-foreground); padding: 8px;"><p>No .resx files found in this workspace.</p></body></html>`;

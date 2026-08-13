@@ -1,10 +1,18 @@
+/**
+ * @module panels/tablePanel
+ * Owns the `WebviewPanel` for a single `.resx` family's translation table: one instance per
+ * open tab, keyed by `dir::baseName`. Renders via {@link ../webview/renderTable}, and handles
+ * every `postMessage` the webview sends (save/delete/addKey/export/import) by delegating to
+ * {@link ../resx/saveTranslations} and {@link ../resx/exportImport}.
+ */
 import * as vscode from "vscode";
-import { ResxGroup, groupResxFiles, parseResxFile } from "./resxParser";
-import { renderTableHtml } from "./renderTable";
-import { saveTranslations, deleteTranslationKey, TranslationEdit } from "./saveTranslations";
-import { buildCsvContent, buildJsonContent, parseImportContent, buildImportPlan } from "./exportImport";
+import { ResxGroup, groupResxFiles, parseResxFile } from "../resx/resxParser";
+import { renderTableHtml } from "../webview/renderTable";
+import { saveTranslations, deleteTranslationKey, TranslationEdit } from "../resx/saveTranslations";
+import { buildCsvContent, buildJsonContent, parseImportContent, buildImportPlan } from "../resx/exportImport";
 import { showImportLog } from "./importLogPanel";
 
+/** Manages the lifecycle of every open translation-table tab. */
 export class TablePanel {
   private static readonly panels = new Map<string, TablePanel>();
   private static readonly closeEmitter = new vscode.EventEmitter<vscode.Uri[]>();
@@ -46,6 +54,7 @@ export class TablePanel {
     }
   }
 
+  /** Re-parses each open panel's files from disk and re-renders it — used after any external file change. */
   public static async refreshAll(): Promise<void> {
     for (const instance of TablePanel.panels.values()) {
       await instance.refresh();
@@ -77,6 +86,7 @@ export class TablePanel {
     instance.update(group);
   }
 
+  /** Re-renders this panel's webview with fresh data and remembers `group` for later export/import/refresh. */
   public update(group: ResxGroup) {
     this.currentGroup = group;
     this.panel.webview.html = renderTableHtml([group]);
@@ -240,6 +250,7 @@ export class TablePanel {
     }
   }
 
+  /** Unregisters this panel and notifies {@link onDidClose} listeners which files it owned. */
   public dispose() {
     TablePanel.panels.delete(this.groupKey);
     this.disposables.forEach((d) => d.dispose());
