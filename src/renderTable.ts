@@ -59,8 +59,14 @@ function renderGroup(group: ResxGroup): string {
 
   return `
   <div class="group-header">
-    <h2>${escapeHtml(group.baseName)}</h2>
-    <span class="group-meta">${sortedKeys.length} keys &middot; ${locales.length} locales</span>
+    <div class="group-title">
+      <h2>${escapeHtml(group.baseName)}</h2>
+      <span class="group-meta">${sortedKeys.length} keys &middot; ${locales.length} locales</span>
+    </div>
+    <div class="group-actions">
+      <button class="pill-btn import-btn" title="Import translations from a CSV or JSON file"><span class="icon-slot"></span><span>Import</span></button>
+      <button class="pill-btn export-btn" title="Export table to CSV or JSON"><span class="icon-slot"></span><span>Export</span></button>
+    </div>
   </div>
   <div class="table-wrapper">
   <table>
@@ -97,10 +103,17 @@ export function renderTableHtml(groups: ResxGroup[]): string {
     }
     .group-header {
       display: flex;
-      align-items: baseline;
-      gap: 10px;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
       margin-top: 28px;
       margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+    .group-title {
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
     }
     h2 {
       font-weight: 650;
@@ -111,6 +124,45 @@ export function renderTableHtml(groups: ResxGroup[]): string {
     .group-meta {
       font-size: 12px;
       opacity: 0.6;
+    }
+    .group-actions {
+      display: flex;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+    .pill-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px 6px 10px;
+      border-radius: 999px;
+      border: 1px solid color-mix(in srgb, var(--vscode-charts-blue, var(--vscode-focusBorder)) 40%, transparent);
+      background: color-mix(in srgb, var(--vscode-charts-blue, var(--vscode-focusBorder)) 10%, transparent);
+      color: var(--vscode-charts-blue, var(--vscode-textLink-foreground));
+      font-family: var(--vscode-font-family);
+      font-size: 12.5px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.12s ease, border-color 0.12s ease, transform 0.06s ease;
+    }
+    .pill-btn:hover {
+      background: color-mix(in srgb, var(--vscode-charts-blue, var(--vscode-focusBorder)) 20%, transparent);
+    }
+    .pill-btn:active {
+      transform: scale(0.96);
+    }
+    .pill-btn .icon-slot svg {
+      width: 15px;
+      height: 15px;
+      pointer-events: none;
+    }
+    .import-btn {
+      border-color: color-mix(in srgb, var(--vscode-charts-green, #3fb950) 40%, transparent);
+      background: color-mix(in srgb, var(--vscode-charts-green, #3fb950) 10%, transparent);
+      color: var(--vscode-charts-green, #3fb950);
+    }
+    .import-btn:hover {
+      background: color-mix(in srgb, var(--vscode-charts-green, #3fb950) 20%, transparent);
     }
     .table-wrapper {
       border: 1px solid var(--vscode-panel-border);
@@ -270,6 +322,8 @@ export function renderTableHtml(groups: ResxGroup[]): string {
   <template id="icon-edit"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M12.146 1.146a.5.5 0 0 1 .708 0l2 2a.5.5 0 0 1 0 .708l-8.5 8.5a.5.5 0 0 1-.233.131l-4 1a.5.5 0 0 1-.606-.606l1-4a.5.5 0 0 1 .131-.232l8.5-8.5zM11.5 2.5 13.5 4.5 14.646 3.354 12.646 1.354 11.5 2.5zM10.793 3.207 4 10v.001L3.293 12.708 6 12l6.793-6.793-2-2z"/></svg></template>
   <template id="icon-save"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M2 1h9.5a.5.5 0 0 1 .354.146l2 2A.5.5 0 0 1 14 3.5V14a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1zm1 1v3h7V2H3zm-1 5v7h10V8H2zm2 1h6v3H4V9z"/></svg></template>
   <template id="icon-delete"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M6 2a1 1 0 0 0-1 1v1H2.5a.5.5 0 0 0 0 1H3v9a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V5h.5a.5.5 0 0 0 0-1H11V3a1 1 0 0 0-1-1H6zm0 1h4v1H6V3zM4 5h8v9H4V5zm2 2a.5.5 0 0 0-.5.5v5a.5.5 0 0 0 1 0v-5A.5.5 0 0 0 6 7zm2 0a.5.5 0 0 0-.5.5v5a.5.5 0 0 0 1 0v-5A.5.5 0 0 0 8 7zm2 0a.5.5 0 0 0-.5.5v5a.5.5 0 0 0 1 0v-5A.5.5 0 0 0 10 7z"/></svg></template>
+  <template id="icon-export"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a.5.5 0 0 1 .5.5v7.293l2.146-2.147a.5.5 0 0 1 .708.708l-3 3a.5.5 0 0 1-.708 0l-3-3a.5.5 0 1 1 .708-.708L7.5 8.793V1.5A.5.5 0 0 1 8 1zM2.5 13a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5z"/></svg></template>
+  <template id="icon-import"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 15a.5.5 0 0 1-.5-.5V7.207L5.354 9.354a.5.5 0 1 1-.708-.708l3-3a.5.5 0 0 1 .708 0l3 3a.5.5 0 1 1-.708.708L8.5 7.207V14.5A.5.5 0 0 1 8 15zM2.5 3a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5z"/></svg></template>
   ${sections}
   <script nonce="${nonce}">
     (function () {
@@ -352,6 +406,20 @@ export function renderTableHtml(groups: ResxGroup[]): string {
             }));
             vscode.postMessage({ command: "addKey", key, edits });
           }
+        });
+      });
+
+      document.querySelectorAll(".export-btn").forEach((btn) => {
+        setIcon(btn, "icon-import");
+        btn.addEventListener("click", () => {
+          vscode.postMessage({ command: "export" });
+        });
+      });
+
+      document.querySelectorAll(".import-btn").forEach((btn) => {
+        setIcon(btn, "icon-export");
+        btn.addEventListener("click", () => {
+          vscode.postMessage({ command: "import" });
         });
       });
 

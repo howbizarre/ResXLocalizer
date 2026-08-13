@@ -22,6 +22,7 @@ A Visual Studio Code extension that shows your `.resx` localization resources (t
 - [Getting started](#getting-started)
 - [Sidebar — file list](#sidebar--file-list)
 - [Translation table](#translation-table)
+- [Exporting and importing](#exporting-and-importing)
 - [How files are grouped](#how-files-are-grouped)
 - [For translators (no coding experience needed)](#for-translators-no-coding-experience-needed)
 - [For C# / Visual Studio developers](#for-c--visual-studio-developers)
@@ -39,6 +40,7 @@ A Visual Studio Code extension that shows your `.resx` localization resources (t
 - **Deleting a key** from every language at once, with a confirmation prompt first.
 - **Highlights missing/untranslated values in red**, so you immediately see which translations are still missing.
 - **Per-column filtering** (by key or by translated value); filters on different columns combine — you only see rows that match all of them at once.
+- **Export the table to CSV or JSON**, and **import** translations back from a CSV/JSON file — validated before anything is written, with a review log if existing values got overwritten.
 - **Sidebar view** in the Activity Bar with a tree of every `.resx` file in the project, grouped by folder and by "family" — check a box to open that file in a table.
 - **Add a new language** to an existing file family directly from the sidebar — pick from a list of common languages, or type any custom locale code (e.g. `pt-BR`); the new file is created automatically with every key from the base file, ready to be translated.
 - **Create a brand-new "master" `.resx` file** if the project doesn't have one yet.
@@ -153,6 +155,32 @@ A cell with no value (or only whitespace) is highlighted with a **red accent** o
 ### Filtering
 
 Under every column header (except Actions) there's a **Filter...** field — type text and only rows whose value in that column contains it are shown (case-insensitive). Filters on different columns combine — for example, a filter of `Login` on Key plus `error` on BG shows only rows matching **both** conditions at once.
+
+---
+
+## Exporting and importing
+
+Two buttons sit above each table, at the top right: **⬇ Export** and **⬆ Import**.
+
+### Export
+
+Click **Export**, choose **CSV** or **JSON**, then pick where to save it. The file contains one row per key, with a column per language (the base file's column is called `default`) — the same shape you see in the table.
+
+### Import
+
+Click **Import** and pick a `.csv` or `.json` file. Before anything is written to your `.resx` files, the extension validates the file:
+
+- the file must parse correctly (valid CSV/JSON), with a `Key` column/field on every row;
+- if any row is malformed or missing its key, the import is **rejected entirely** — a dialog lists the problems found, and nothing gets changed.
+
+Once validation passes:
+
+- rows with a **key that doesn't exist yet** are added as new translations;
+- rows with a **key that already exists** overwrite the existing value for that language — this is logged;
+- blank cells are skipped (they never erase an existing translation);
+- columns that don't match any language file open in this table are ignored.
+
+If any existing values were overwritten, a **new tab opens automatically** right after the import finishes, listing every overwritten key with its old and new value side by side, so you can review exactly what changed.
 
 ---
 

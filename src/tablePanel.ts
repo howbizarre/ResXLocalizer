@@ -2,6 +2,8 @@ import * as vscode from "vscode";
 import { ResxGroup, groupResxFiles, parseResxFile } from "./resxParser";
 import { renderTableHtml } from "./renderTable";
 import { saveTranslations, deleteTranslationKey, TranslationEdit } from "./saveTranslations";
+import { buildCsvContent, buildJsonContent, parseImportContent, buildImportPlan } from "./exportImport";
+import { showImportLog } from "./importLogPanel";
 
 export class TablePanel {
   private static readonly panels = new Map<string, TablePanel>();
@@ -12,6 +14,7 @@ export class TablePanel {
   private readonly groupKey: string;
   private disposables: vscode.Disposable[] = [];
   private currentUris: vscode.Uri[] = [];
+  private currentGroup: ResxGroup | undefined;
 
   private constructor(panel: vscode.WebviewPanel, groupKey: string) {
     this.panel = panel;
@@ -25,6 +28,10 @@ export class TablePanel {
           void this.handleDelete(message.key, message.files as string[]);
         } else if (message?.command === "addKey" && typeof message.key === "string" && Array.isArray(message.edits)) {
           void this.handleAddKey(message.key, message.edits as TranslationEdit[]);
+        } else if (message?.command === "export") {
+          void this.handleExport();
+        } else if (message?.command === "import") {
+          void this.handleImport();
         }
       },
       null,
@@ -71,6 +78,7 @@ export class TablePanel {
   }
 
   public update(group: ResxGroup) {
+    this.currentGroup = group;
     this.panel.webview.html = renderTableHtml([group]);
   }
 
@@ -137,6 +145,99 @@ export class TablePanel {
     await deleteTranslationKey(key, files);
     await this.refresh();
     vscode.window.showInformationMessage(`ResXLocalizer: Deleted "${key}".`);
+  }
+
+  private async handleExport(): Promise<void> {
+    const group = this.currentGroup;
+    if (!group) {
+      return;
+    }
+
+    const choice = await vscode.window.showQuickPick(
+      [
+        { label: "CSV", description: ".csv" },
+        { label: "JSON", description: ".json" }
+      ],
+      { placeHolder: "Export format" }
+    );
+    if (!choice) {
+      return;
+    }
+
+    const isCsv = choice.label === "CSV";
+    const ext = isCsv ? "csv" : "json";
+    const content = isCsv ? buildCsvContent(group) : buildJsonContent(group);
+    const baseFile = group.files[0];
+    const defaultUri = baseFile
+      ? vscode.Uri.joinPath(baseFile.uri, "..", `${group.baseName}.${ext}`)
+      : undefined;
+
+    const target = await vscode.window.showSaveDialog({
+      defaultUri,
+      filters: isCsv ? { CSV: ["csv"] } : { JSON: ["json"] }
+    });
+    if (!target) {
+      return;
+    }
+
+    await vscode.workspace.fs.writeFile(target, Buffer.from(content, "utf8"));
+    vscode.window.showInformationMessage(`ResXLocalizer: Exported to ${target.fsPath}.`);
+  }
+
+  private async handleImport(): Promise<void> {
+    const group = this.currentGroup;
+    if (!group) {
+      return;
+    }
+
+    const picked = await vscode.window.showOpenDialog({
+      canSelectMany: false,
+      filters: { "CSV / JSON": ["csv", "json"] },
+      openLabel: "Import"
+    });
+    if (!picked || picked.length === 0) {
+      return;
+    }
+
+    const fileUri = picked[0];
+    const fileName = fileUri.path.split("/").pop() ?? fileUri.fsPath;
+    const bytes = await vscode.workspace.fs.readFile(fileUri);
+    const text = Buffer.from(bytes).toString("utf8");
+
+    const parsed = parseImportContent(fileName, text);
+    if (parsed.errors.length > 0) {
+      const shown = parsed.errors.slice(0, 20);
+      const more = parsed.errors.length > shown.length ? `\n… and ${parsed.errors.length - shown.length} more.` : "";
+      await vscode.window.showErrorMessage(
+        `ResXLocalizer: import failed — ${parsed.errors.length} problem(s) found in "${fileName}". Nothing was changed.`,
+        { modal: true, detail: shown.join("\n") + more }
+      );
+      return;
+    }
+
+    if (parsed.rows.length === 0) {
+      vscode.window.showWarningMessage(`ResXLocalizer: "${fileName}" contained no rows to import.`);
+      return;
+    }
+
+    const plan = buildImportPlan(group, parsed.rows);
+    if (plan.edits.length === 0) {
+      vscode.window.showWarningMessage(`ResXLocalizer: nothing to import from "${fileName}" — no matching columns/values found.`);
+      return;
+    }
+
+    await saveTranslations(plan.edits);
+    await this.refresh();
+
+    const added = plan.log.filter((e) => e.action === "added").length;
+    const overwritten = plan.log.filter((e) => e.action === "overwritten").length;
+    vscode.window.showInformationMessage(
+      `ResXLocalizer: import complete — ${added} value(s) added, ${overwritten} overwritten.`
+    );
+
+    if (overwritten > 0) {
+      showImportLog(group.baseName, plan.log, plan.ignoredColumns, parsed.warnings);
+    }
   }
 
   public dispose() {
