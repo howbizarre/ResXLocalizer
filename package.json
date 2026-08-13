@@ -1,6 +1,6 @@
 {
-  "name": "lokalizator",
-  "displayName": "Lokalizator",
+  "name": "resxlocalizer",
+  "displayName": "ResXLocalizer",
   "description": "Visualize .resx localization resources as a key/language table.",
   "version": "0.0.1",
   "publisher": "kosta",
@@ -16,28 +16,28 @@
   "contributes": {
     "commands": [
       {
-        "command": "lokalizator.openTable",
-        "title": "Lokalizator: Open Resx Table",
+        "command": "resxlocalizer.openTable",
+        "title": "ResXLocalizer: Open Resx Table",
         "icon": "$(table)"
       },
       {
-        "command": "lokalizator.refreshTable",
-        "title": "Lokalizator: Refresh Table",
+        "command": "resxlocalizer.refreshTable",
+        "title": "ResXLocalizer: Refresh Table",
         "icon": "$(refresh)"
       }
     ],
     "menus": {
       "explorer/context": [
         {
-          "command": "lokalizator.openTable",
+          "command": "resxlocalizer.openTable",
           "when": "resourceExtname == .resx",
-          "group": "lokalizator"
+          "group": "resxlocalizer"
         }
       ],
       "view/title": [
         {
-          "command": "lokalizator.refreshTable",
-          "when": "view == lokalizator.fileListView",
+          "command": "resxlocalizer.refreshTable",
+          "when": "view == resxlocalizer.fileListView",
           "group": "navigation"
         }
       ]
@@ -45,16 +45,16 @@
     "viewsContainers": {
       "activitybar": [
         {
-          "id": "lokalizator",
-          "title": "Lokalizator",
+          "id": "resxlocalizer",
+          "title": "ResXLocalizer",
           "icon": "media/icon.svg"
         }
       ]
     },
     "views": {
-      "lokalizator": [
+      "resxlocalizer": [
         {
-          "id": "lokalizator.fileListView",
+          "id": "resxlocalizer.fileListView",
           "name": "Resx Files",
           "type": "webview"
         }

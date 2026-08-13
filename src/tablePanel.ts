@@ -23,8 +23,8 @@ export class TablePanel {
     }
 
     const panel = vscode.window.createWebviewPanel(
-      "lokalizatorTable",
-      "Lokalizator",
+      "resxlocalizerTable",
+      "ResXLocalizer",
       vscode.ViewColumn.One,
       { enableScripts: false, retainContextWhenHidden: true }
     );

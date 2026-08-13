@@ -10,7 +10,7 @@ async function openTable() {
   const groups = await findResxGroups();
   if (groups.length === 0) {
     const choice = await vscode.window.showInformationMessage(
-      "Lokalizator: No .resx files found in this workspace.",
+      "ResXLocalizer: No .resx files found in this workspace.",
       "Create master .resx file"
     );
     if (choice) {
@@ -44,8 +44,8 @@ export function activate(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(
     vscode.window.registerWebviewViewProvider(FileListProvider.viewType, fileListProvider),
-    vscode.commands.registerCommand("lokalizator.openTable", () => openTable()),
-    vscode.commands.registerCommand("lokalizator.refreshTable", () => {
+    vscode.commands.registerCommand("resxlocalizer.openTable", () => openTable()),
+    vscode.commands.registerCommand("resxlocalizer.refreshTable", () => {
       void fileListProvider.refresh();
       void refreshOpenTable();
     }),

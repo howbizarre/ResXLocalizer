@@ -40,7 +40,7 @@ interface FamilyGroup {
 }
 
 export class FileListProvider implements vscode.WebviewViewProvider {
-  public static readonly viewType = "lokalizator.fileListView";
+  public static readonly viewType = "resxlocalizer.fileListView";
 
   private view: vscode.WebviewView | undefined;
 
@@ -103,7 +103,7 @@ export class FileListProvider implements vscode.WebviewViewProvider {
 
     try {
       await vscode.workspace.fs.stat(newFileUri);
-      vscode.window.showWarningMessage(`Lokalizator: ${baseName}.${locale}.resx already exists.`);
+      vscode.window.showWarningMessage(`ResXLocalizer: ${baseName}.${locale}.resx already exists.`);
       return;
     } catch {
       // File does not exist yet — safe to create.

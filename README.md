@@ -1,4 +1,4 @@
-# Lokalizator
+# ResXLocalizer
 
 VSCode разширение, което визуализира `.resx` ресурси за локализация като таблица: колона `Key` + по една колона за всеки locale вариант (`Strings.resx`, `Strings.bg.resx`, `Strings.de.resx`, ...).
 
@@ -7,7 +7,7 @@ VSCode разширение, което визуализира `.resx` ресу�
 1. `npm install`
 2. Натисни `F5` (Run Extension) — отваря се нов Extension Development Host прозорец.
 3. В него отвори работна папка, съдържаща `.resx` файлове.
-4. Command Palette → **Lokalizator: Open Resx Table** (или десен клик върху `.resx` файл в Explorer).
+4. Command Palette → **ResXLocalizer: Open Resx Table** (или десен клик върху `.resx` файл в Explorer).
 
 ## Конвенция за групиране на файлове
 

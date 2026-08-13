@@ -32,7 +32,7 @@ export async function createMasterResxFile(): Promise<void> {
 
   try {
     await vscode.workspace.fs.stat(fileUri);
-    vscode.window.showWarningMessage(`Lokalizator: ${baseName.trim()}.resx already exists.`);
+    vscode.window.showWarningMessage(`ResXLocalizer: ${baseName.trim()}.resx already exists.`);
     return;
   } catch {
     // Does not exist yet — safe to create.
