@@ -2,7 +2,7 @@
   "name": "resxlocalizer",
   "displayName": "ResXLocalizer",
   "description": "Visualize .resx localization resources as a key/language table.",
-  "version": "0.0.1",
+  "version": "1.0.1",
   "publisher": "kosta",
   "private": true,
   "license": "CC-BY-NC-SA-4.0",
