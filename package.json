@@ -87,7 +87,8 @@
     "check-types": "tsc --noEmit",
     "lint": "eslint src",
     "vscode:prepublish": "npm run check-types && npm run lint && npm run package",
-    "vsix": "vsce package"
+    "vsix": "vsce package",
+    "publish": "vsce publish"
   },
   "dependencies": {
     "fast-xml-parser": "^4.5.0"
