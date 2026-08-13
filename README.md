@@ -1,231 +1,233 @@
+<img src="media/marketplace-icon.png" alt="ResXLocalizer logo" width="84" align="left">
+
 # ResXLocalizer
 
+<br clear="left" />
+
+[![Visual Studio Marketplace](https://img.shields.io/visual-studio-marketplace/v/howbizarre.resxlocalizer?label=VS%20Marketplace&color=0e639c)](https://marketplace.visualstudio.com/items?itemName=HowBizarre.resxlocalizer)
 [![License: CC BY-NC-SA 4.0](https://img.shields.io/badge/License-CC%20BY--NC--SA%204.0-lightgrey.svg)](LICENSE)
 
-🇧🇬 Български | [🇬🇧 English](README_EN.md)
+[🇧🇬 Български](README_BG.md) | 🇬🇧 English
 
-Разширение за Visual Studio Code, което показва `.resx` файловете за локализация (същите, които ползва Visual Studio за `.NET` проекти) като една удобна таблица: **ключ + по една колона за всеки език**, вместо да отваряш и сравняваш ръчно по няколко XML файла.
+A Visual Studio Code extension that shows your `.resx` localization resources (the same files Visual Studio uses for `.NET` projects) as one convenient table: **key + one column per language**, instead of opening and comparing several XML files by hand.
 
-![Таблица с преводи](media/screenshots/table-view.png)
-
-Създадено е с мисъл, че:
-
-- повечето C# разработчици идват от **Visual Studio** и за пръв път пипат VS Code точно заради това разширение;
-- преводачите, които ще редактират текстовете, обикновено **не са програмисти** и не бива да им се налага да пипат XML или конзола.
-
-Затова тази документация е написана стъпка по стъпка, все едно виждаш VS Code за първи път. Ако вече си запознат с VS Code, може спокойно да прескочиш направо до [Какво прави разширението](#какво-прави-разширението).
+![Translation table](media/screenshots/table-view.png)
 
 ---
 
-## Съдържание
+## Table of contents
 
-- [Какво прави разширението](#какво-прави-разширението)
-- [Инсталация](#инсталация)
-- [Първи стъпки](#първи-стъпки)
-- [Странична лента — списък с файлове](#странична-лента--списък-с-файлове)
-- [Таблица с преводи](#таблица-с-преводи)
-- [Как се групират файловете](#как-се-групират-файловете)
-- [За преводачи (без програмистки опит)](#за-преводачи-без-програмистки-опит)
-- [За C# / Visual Studio разработчици](#за-c--visual-studio-разработчици)
-- [Разработка на самото разширение](#разработка-на-самото-разширение)
+- [What the extension does](#what-the-extension-does)
+- [Installation](#installation)
+- [Getting started](#getting-started)
+- [Sidebar — file list](#sidebar--file-list)
+- [Translation table](#translation-table)
+- [How files are grouped](#how-files-are-grouped)
+- [For translators (no coding experience needed)](#for-translators-no-coding-experience-needed)
+- [For C# / Visual Studio developers](#for-c--visual-studio-developers)
+- [Developing the extension itself](#developing-the-extension-itself)
 - [Roadmap](#roadmap)
-- [Лиценз](#лиценз)
+- [License](#license)
 
 ---
 
-## Какво прави разширението
+## What the extension does
 
-- **Визуализира всички `.resx` файлове от един "семейство"** (напр. `Strings.resx`, `Strings.bg.resx`, `Strings.de.resx`) като **една таблица**: ред за всеки ключ, колона за всеки език.
-- **Редактиране на място** — правиш промени директно в таблицата, разширението ги записва обратно в правилните `.resx` файлове, **запазвайки коментарите и форматирането** им (не пренаписва целия файл).
-- **Добавяне на нов превод (нов ключ)** — чрез постоянен ред "New key" най-отгоре на таблицата.
-- **Изтриване на ключ** от всички езици наведнъж, с потвърждение преди изтриване.
-- **Оцветява липсващите/непреведени стойности в червено**, за да се виждат веднага кои преводи липсват.
-- **Филтриране по колона** (по ключ или по стойност на превод), филтрите се комбинират — виждаш само редовете, отговарящи на всички едновременно.
-- **Странична лента (sidebar)** в Activity Bar с дърво от всички `.resx` файлове в проекта, групирани по папка и по "семейство" — маркираш чрез чекбокс кои файлове искаш да отвориш в таблица.
-- **Добавяне на нов език** към съществуващо семейство от файлове директно от страничната лента — избираш от списък с общи езици или въвеждаш произволен код (напр. `pt-BR`); новият файл се създава автоматично с всички ключове от базовия (default) файл, готови за превод.
-- **Създаване на нов "master" `.resx` файл от нулата**, ако проектът все още няма нито един.
-- **Автоматично разпознаване на базовия език** (напр. "en") от `.csproj`/`.vbproj` (`<NeutralLanguage>`) или `AssemblyInfo` (`NeutralResourcesLanguage`) — същите настройки, които вече ползва .NET проектът ти.
-- **Автоматично обновяване** — ако файл бъде променен, добавен или изтрит на диска (например при `git pull` или редакция в друг редактор), таблицата и страничната лента се опресняват сами.
-- Всяко "семейство" от `.resx` файлове се отваря в **собствен таб**, за да не се смесват различни таблици.
+- **Visualizes every `.resx` file in a "family"** (e.g. `Strings.resx`, `Strings.bg.resx`, `Strings.de.resx`) as **one table**: a row per key, a column per language.
+- **In-place editing** — you edit values directly in the table, and the extension writes them back into the correct `.resx` files, **preserving existing comments and formatting** (it never rewrites the whole file).
+- **Adding a new translation (new key)** through a permanent "New key" row pinned to the top of the table.
+- **Deleting a key** from every language at once, with a confirmation prompt first.
+- **Highlights missing/untranslated values in red**, so you immediately see which translations are still missing.
+- **Per-column filtering** (by key or by translated value); filters on different columns combine — you only see rows that match all of them at once.
+- **Sidebar view** in the Activity Bar with a tree of every `.resx` file in the project, grouped by folder and by "family" — check a box to open that file in a table.
+- **Add a new language** to an existing file family directly from the sidebar — pick from a list of common languages, or type any custom locale code (e.g. `pt-BR`); the new file is created automatically with every key from the base file, ready to be translated.
+- **Create a brand-new "master" `.resx` file** if the project doesn't have one yet.
+- **Auto-detects the base language** (e.g. "en") from `.csproj`/`.vbproj` (`<NeutralLanguage>`) or `AssemblyInfo` (`NeutralResourcesLanguage`) — the same settings your .NET project already uses.
+- **Auto-refreshes** — if a file is changed, added, or deleted on disk (e.g. via `git pull` or another editor), the table and sidebar update themselves.
+- Each `.resx` "family" opens in its **own tab**, so different tables never mix together.
 
 ---
 
-## Инсталация
+## Installation
 
-Разширението **не е публикувано в Marketplace** — инсталира се от `.vsix` файл, който получаваш от колега или от хранилището на проекта.
+### Option A — from the Marketplace (recommended)
 
-### Вариант А — през интерфейса на VS Code (препоръчано за преводачи / начинаещи)
+Search for **"ResXLocalizer"** in the Extensions view (`Ctrl+Shift+X`) inside VS Code, or install it directly from its [Marketplace page](https://marketplace.visualstudio.com/items?itemName=HowBizarre.resxlocalizer).
 
-1. Изтегли файла `resxlocalizer-X.X.X.vsix` (X.X.X е версията).
-2. Отвори **Visual Studio Code**.
-3. В лявата лента с икони (**Activity Bar**) отвори **Extensions** (иконата прилича на 4 квадратчета ▦), или натисни `Ctrl+Shift+X`.
-4. Горе вдясно в панела Extensions натисни бутона с трите точки **`...`**.
-5. Избери **"Install from VSIX..."**.
-6. Посочи изтегления `.vsix` файл и потвърди.
-7. Когато инсталацията приключи, VS Code ще предложи **Reload** (или "Restart Extensions") — натисни го.
+### Option B — from a `.vsix` file
 
-### Вариант Б — през терминала (за разработчици)
+Useful if someone gave you a specific build directly (e.g. a pre-release), instead of installing through the Marketplace.
+
+1. Download the `resxlocalizer-X.X.X.vsix` file (X.X.X is the version number).
+2. Open **Visual Studio Code**.
+3. In the icon bar on the left (**Activity Bar**), open **Extensions** (the icon looks like 4 little squares ▦), or press `Ctrl+Shift+X`.
+4. At the top-right of the Extensions panel, click the three-dot button **`...`**.
+5. Choose **"Install from VSIX..."**.
+6. Point it at the downloaded `.vsix` file and confirm.
+7. Once installation finishes, VS Code will offer to **Reload** (or "Restart Extensions") — click it.
+
+Or, from the terminal:
 
 ```bash
 code --install-extension resxlocalizer-0.0.1.vsix
 ```
 
-> **Съвет:** ако по-късно инсталираш нова версия на разширението върху стара, винаги прави **Reload Window** (`Ctrl+Shift+P` → "Developer: Reload Window") — иначе VS Code може да продължи да показва старата версия на вече отворените панели.
+> **Tip:** whenever you install a newer version of the extension over an older one, always run **Reload Window** (`Ctrl+Shift+P` → "Developer: Reload Window") afterwards — otherwise VS Code may keep showing the old version in panels that are already open.
 
 ---
 
-## Първи стъпки
+## Getting started
 
-1. **Отвори работната папка (workspace)** на .NET проекта: **File → Open Folder...** и избери главната папка на проекта (тази, която съдържа `.csproj` файла).
-2. В **Activity Bar** (лентата с икони вляво) ще се появи нова икона на разширението — **ResXLocalizer**. Кликни върху нея, за да отвориш страничния панел.
-3. Разширението автоматично претърсва цялата папка за `.resx` файлове:
+1. **Open the project's workspace folder**: **File → Open Folder...** and pick the project's root folder (the one that contains the `.csproj` file).
+2. A new icon — **ResXLocalizer** — appears in the **Activity Bar** on the left. Click it to open the sidebar panel.
+3. The extension automatically scans the whole folder for `.resx` files:
 
-   - **Ако вече има `.resx` файлове** — ще видиш дърво с папки и файлове (виж следващия раздел).
-   - **Ако все още няма нито един** — ще видиш само едно съобщение и бутон:
+   - **If there are `.resx` files already** — you'll see a tree of folders and files (see the next section).
+   - **If there are none yet** — you'll just see a short message and a button:
 
-     ![Празно състояние — създаване на нов файл](media/screenshots/empty-state.png)
+     ![Empty state — create a new file](media/screenshots/empty-state.png)
 
-     Натискането на **"Create master .resx file"** те превежда през два лесни стъпки: избираш папка, после въвеждаш име (например `Strings`) — разширението създава празен, валиден `.resx` файл (същата структура, която генерира и Visual Studio), готов за първите ти ключове.
+     Clicking **"Create master .resx file"** walks you through two simple steps: pick a folder, then type a name (e.g. `Strings`) — the extension creates an empty, valid `.resx` file (the same structure Visual Studio generates), ready for your first keys.
 
-4. Маркирай чекбокс до файловете, които искаш да видиш в таблица (виж по-долу), или кликни с десен бутон върху `.resx` файл в обикновения VS Code Explorer → **"ResXLocalizer: Open Resx Table"**.
-
----
-
-## Странична лента — списък с файлове
-
-![Странична лента с файлове](media/screenshots/sidebar-view.png)
-
-Файловете са организирани в дърво:
-
-- **Папка** (📁) — както е в реалната файлова структура на проекта.
-- **Семейство** (напр. `LOGINPAGE`) — всички `.resx` файлове с еднакво базово име в тази папка: базовият (default) файл + вариантите му за всеки език.
-- Всеки файл има цветно **badge** с езиковия код:
-  - **синьо badge** = базовият ("master") файл — този без езиков код в името (`LoginPage.resx`). Ако проектът декларира `<NeutralLanguage>` в `.csproj`, badge-ът ще показва точно този език (напр. `en`) вместо генеричното "src".
-  - **сиво badge** = конкретен превод (`bg`, `de`, `fr`...).
-
-**Маркиране на чекбокс отваря таблицата** с избраните файлове (или ги добавя към вече отворената таблица за това семейство). Ако маркираш само превод (напр. `bg`), базовият файл автоматично се маркира и той — таблицата винаги показва поне колоната по подразбиране, за контекст на превода.
-
-**"Add new"** под всяко семейство добавя нов език към него:
-
-1. Клик върху **"+ Add new"**.
-2. Появява се списък с най-често срещаните езици (English, Bulgarian, German, French...) — избираш с мишка/стрелки, или **пишеш свой код** (напр. `pt-BR`, `zh-Hant`), ако го няма в списъка.
-3. Разширението създава нов `.resx` файл (напр. `LoginPage.pt-BR.resx`) с **всички ключове от базовия файл, но с празни стойности** — готов за превод.
-4. Ако другите файлове в семейството вече ползват формат с регион (напр. `de-DE` вместо просто `de`), новият файл автоматично приема същия формат, за консистентност.
-
-Бутонът **⟳ (Refresh)** горе в панела презарежда списъка ръчно (обикновено не е нужен — разширението следи файловете автоматично).
+4. Check the box next to the files you want to see in a table (see below), or right-click a `.resx` file in the regular VS Code Explorer → **"ResXLocalizer: Open Resx Table"**.
 
 ---
 
-## Таблица с преводи
+## Sidebar — file list
 
-Всяко семейство `.resx` файлове се отваря в собствен таб с таблица:
+![Sidebar file list](media/screenshots/sidebar-view.png)
 
-| Колона | Съдържание |
+Files are organized as a tree:
+
+- **Folder** (📁) — matching the real folder structure of the project.
+- **Family** (e.g. `LOGINPAGE`) — every `.resx` file with the same base name in that folder: the base (default) file plus its per-language variants.
+- Each file has a colored language **badge**:
+  - **blue badge** = the base ("master") file — the one with no language code in its name (`LoginPage.resx`). If the project declares `<NeutralLanguage>` in its `.csproj`, the badge shows that exact language (e.g. `en`) instead of the generic "src".
+  - **grey badge** = a specific translation (`bg`, `de`, `fr`, ...).
+
+**Checking a box opens the table** with the selected files (or adds them to an already-open table for that family). If you only check a translation (e.g. `bg`), the base file gets checked automatically too — the table always shows at least the default column, for context.
+
+**"Add new"** under each family adds a new language to it:
+
+1. Click **"+ Add new"**.
+2. A list of common languages appears (English, Bulgarian, German, French...) — pick one with the mouse/arrow keys, or **type your own code** (e.g. `pt-BR`, `zh-Hant`) if it isn't in the list.
+3. The extension creates a new `.resx` file (e.g. `LoginPage.pt-BR.resx`) with **every key from the base file, but with empty values** — ready to be translated.
+4. If the other files in the family already use a region-qualified format (e.g. `de-DE` instead of just `de`), the new file automatically follows the same format, for consistency.
+
+The **⟳ (Refresh)** button at the top of the panel reloads the list manually (you usually won't need it — the extension already watches the files automatically).
+
+---
+
+## Translation table
+
+Each `.resx` family opens in its own tab as a table:
+
+| Column | Content |
 |---|---|
-| **Actions** | Бутони за редакция/изтриване на реда |
-| **Key** | Името на ключа (същото за всички езици) |
-| **Default** / език | По една колона за всеки `.resx` файл в семейството |
+| **Actions** | Buttons to edit/delete that row |
+| **Key** | The key's name (shared across all languages) |
+| **Default** / language | One column per `.resx` file in the family |
 
-### Редактиране на превод
+### Editing a translation
 
-1. Натисни **✏️ синьото моливче** в началото на реда → клетките на реда стават редактируеми, а иконата се сменя на **💾 зелена дискета**.
-2. Промени текста в която и да е клетка (директно, като в обикновен текстов документ).
-3. Натисни отново зелената иконка, за да **запазиш**. Стойностите се записват във всеки съответен `.resx` файл — коментарите и форматирането на файла се запазват непокътнати, сменя се само стойността.
+1. Click the **✏️ blue pencil** at the start of the row → the row's cells become editable, and the icon turns into a **💾 green save icon**.
+2. Change the text in any cell (directly, like a plain text field).
+3. Click the green icon again to **save**. The values are written back into each corresponding `.resx` file — the file's comments and formatting are left untouched; only the value changes.
 
-### Изтриване на ключ
+### Deleting a key
 
-Натисни **🗑️ червената кофа за боклук** до реда → ще се появи диалог за потвърждение → при потвърждение ключът се премахва от **всички** езикови файлове на реда.
+Click the **🗑️ red trash icon** next to the row → a confirmation dialog appears → once confirmed, the key is removed from **every** language file on that row.
 
-### Добавяне на нов ключ
+### Adding a new key
 
-Най-отгоре на таблицата винаги стои специален ред **"New key"**:
+There's always a special **"New key"** row pinned to the top of the table:
 
-1. Натисни моливчето му, за да го направиш редактируем.
-2. Въведи име на ключа в първата клетка и стойностите за всеки език.
-3. Натисни save. Ако полето за ключ е празно, се маркира в червено и записът се отказва. Ако въведеният ключ вече съществува в групата, ще бъдеш попитан дали да презапишеш стойността му.
+1. Click its pencil icon to make it editable.
+2. Type the key's name into the first cell, and the values for each language.
+3. Click save. If the key field is empty, it's outlined in red and the save is rejected. If the key you typed already exists in the group, you'll be asked whether to overwrite its value.
 
-### Липсващи преводи
+### Missing translations
 
-Клетка без стойност (или само с празни интервали) се откроява с **червен акцент** отляво — веднага виждаш кои езикови варианти още чакат превод.
+A cell with no value (or only whitespace) is highlighted with a **red accent** on its left edge — you immediately see which language variants are still waiting for a translation.
 
-### Филтриране
+### Filtering
 
-Под всяко заглавие на колона (освен Actions) има поле **Filter...** — пишеш текст и се показват само редовете, чиято стойност в тази колона го съдържа (без значение на главни/малки букви). Филтрите на различни колони се комбинират — например филтър `Login` в Key + `грешка` в BG показва само редове, отговарящи на **и двете** условия едновременно.
-
----
-
-## Как се групират файловете
-
-Разширението разпознава файловете по конвенцията на .NET за именуване на ресурси:
-
-- `Strings.resx` — базов ("neutral") файл → показва се като колона по подразбиране.
-- `Strings.bg.resx` — вариант за български.
-- `Strings.de-DE.resx` — вариант за немски (Германия) с регион.
-
-Всички файлове с еднакво базово име (`Strings`) в една и съща папка образуват едно "семейство" и се показват заедно в една таблица. Ключовете в таблицата са обединението на ключовете от всички файлове в групата — така веднага личи ако даден ключ съществува само в част от езиците.
+Under every column header (except Actions) there's a **Filter...** field — type text and only rows whose value in that column contains it are shown (case-insensitive). Filters on different columns combine — for example, a filter of `Login` on Key plus `error` on BG shows only rows matching **both** conditions at once.
 
 ---
 
-## За преводачи (без програмистки опит)
+## How files are grouped
 
-Ако задачата ти е **само да превеждаш текстове**, не се притеснявай от нищо друго в тази документация — трябват ти само тези стъпки:
+The extension recognizes files using .NET's resource-naming convention:
 
-1. Отвори проекта в VS Code (някой програмист от екипа ти го е подготвил и ти е дал линк/папка).
-2. Кликни иконата **ResXLocalizer** в лявата лента.
-3. Маркирай чекбокса до твоя език (например `bg`) в списъка — ще се отвори таблица.
-4. Намери редовете с **червено** — това са липсващите преводи.
-5. За всеки ред: натисни **моливчето** ✏️, попълни превода в твоята колона, натисни **дискетата** 💾 (тя ще стане зелена, докато редактираш).
-6. Готово — промяната се записва автоматично във файла. Не е нужно нищо друго (нито "Save As", нито конзола).
+- `Strings.resx` — the base ("neutral") file → shown as the default column.
+- `Strings.bg.resx` — the Bulgarian variant.
+- `Strings.de-DE.resx` — the German (Germany) variant, with a region.
 
-**Не се налага** да пипаш колоната **Key** на съществуващи редове, нито да трием файлове — просто попълвай стойностите в своята колона.
+Every file sharing the same base name (`Strings`) in the same folder forms one "family" and is shown together in one table. The keys shown are the union of the keys from every file in the group — so it's immediately obvious if a key only exists in some of the languages.
 
 ---
 
-## За C# / Visual Studio разработчици
+## For translators (no coding experience needed)
 
-Ако идваш от **Visual Studio** и за пръв път ползваш VS Code само заради това разширение, ето бърз "речник" между двете среди:
+If your job is **just to translate text**, don't worry about the rest of this document — here's all you need:
+
+1. Open the project in VS Code (someone on the dev team has already set it up and given you a link/folder).
+2. Click the **ResXLocalizer** icon in the left-hand bar.
+3. Check the box next to your language (e.g. `bg`) in the list — a table will open.
+4. Look for rows highlighted in **red** — those are the missing translations.
+5. For each row: click the **pencil** ✏️, fill in the translation in your column, then click the **save icon** 💾 (it turns green while you're editing).
+6. Done — the change is saved automatically to the file. Nothing else is needed (no "Save As", no terminal).
+
+**You don't need to** touch the **Key** column on existing rows, or delete files — just fill in the values in your own column.
+
+---
+
+## For C# / Visual Studio developers
+
+If you're coming from **Visual Studio** and this extension is the first reason you're opening VS Code, here's a quick "dictionary" between the two environments:
 
 | Visual Studio | VS Code + ResXLocalizer |
 |---|---|
-| **Solution Explorer** | **Explorer** панел (иконка на файлове горе вляво) |
-| Двоен клик върху `.resx` → вграден Resource Designer | Десен клик върху `.resx` → **"ResXLocalizer: Open Resx Table"**, или чекбокс в страничния панел на разширението |
-| Добавяне на нов `.resx` за нов език ръчно (copy/paste + преименуване) | Бутон **"Add new"** в страничния панел — създава файла и попълва всички ключове автоматично |
-| `<NeutralLanguage>` в `.csproj` | Разпознава се автоматично и се показва като badge на базовия файл |
+| **Solution Explorer** | **Explorer** panel (the files icon, top-left) |
+| Double-click a `.resx` → built-in Resource Designer | Right-click a `.resx` → **"ResXLocalizer: Open Resx Table"**, or check its box in the extension's sidebar |
+| Adding a new `.resx` for a new language by hand (copy/paste + rename) | The **"Add new"** button in the sidebar — creates the file and fills in every key automatically |
+| `<NeutralLanguage>` in `.csproj` | Detected automatically and shown as a badge on the base file |
 
-Важно за спокойствие: разширението **не пипа проекта, референциите или `.csproj`** — само чете и записва самите `.resx` файлове, като запазва тяхната XML структура (същата, която очаква и `ResXFileCodeGenerator` във Visual Studio). Можеш спокойно да местиш проекта между двете среди — файловете остават напълно съвместими с Visual Studio и след редакция през ResXLocalizer.
+For peace of mind: the extension **never touches the project, its references, or the `.csproj`** — it only reads and writes the `.resx` files themselves, preserving the XML structure that `ResXFileCodeGenerator` in Visual Studio expects. You can freely move the project between both editors — the files stay fully compatible with Visual Studio even after being edited through ResXLocalizer.
 
-Тъй като промените са минимални diff-ове в самия XML (само сменена стойност или добавен `<data>` блок), git diff-овете остават чисти и лесни за преглед в pull request.
+Because changes are minimal diffs in the XML itself (just a changed value, or one added `<data>` block), git diffs stay clean and easy to review in a pull request.
 
 ---
 
-## Разработка на самото разширение
+## Developing the extension itself
 
-За тези, които разработват/поддържат самото ResXLocalizer:
+For anyone building or maintaining ResXLocalizer itself:
 
-- `npm install` — инсталира зависимостите.
-- `npm run watch` — esbuild в watch режим (за `F5` дебъгване в Extension Development Host).
-- `npm run check-types` — TypeScript проверка без емитване на файлове.
+- `npm install` — install dependencies.
+- `npm run watch` — esbuild in watch mode (for `F5` debugging in an Extension Development Host).
+- `npm run check-types` — TypeScript check with no emitted output.
 - `npm run lint` — ESLint.
-- `npm run package` — production build (извиква се от `vscode:prepublish`).
-- `npm run vsix` — пакетира разширението в `.vsix` файл (`@vscode/vsce`).
+- `npm run package` — production build (invoked by `vscode:prepublish`).
+- `npm run vsix` — package the extension into a `.vsix` file (`@vscode/vsce`).
 
 ---
 
 ## Roadmap
 
-- Поддръжка на други формати за локализация (`.json`, `.po`, `.arb`, ...)
+- Support for other localization formats (`.json`, `.po`, `.arb`, ...)
 
 ---
 
-## Лиценз
+## License
 
-ResXLocalizer се разпространява под **Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International (CC BY-NC-SA 4.0)**.
+ResXLocalizer is distributed under **Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International (CC BY-NC-SA 4.0)**.
 
-Накратко (пълните условия са в [LICENSE](LICENSE)):
+In short (full terms are in [LICENSE](LICENSE)):
 
-- ✅ Можеш свободно да го **ползваш**, да го **променяш/доразвиваш** и да го **споделяш** с други хора — както в оригинален, така и в преработен вид.
-- ✅ Единственото изискване е да се посочи първоизточникът (autor + линк към лиценза) и че преработена версия трябва да се разпространява под същия лиценз.
-- ❌ **Не** е позволено то (или преработена версия на него) да се **продава**, да се дава **под наем/абонамент**, или по друг начин да се използва с комерсиална цел.
+- ✅ You're free to **use** it, **modify/extend** it, and **share** it with others — both in its original and in a modified form.
+- ✅ The only requirement is giving credit to the original source (author + a link to the license), and that a modified version must be shared under the same license.
+- ❌ It (or a modified version of it) may **not** be **sold**, **rented out/subscribed to**, or otherwise used for commercial gain.
 
-Пълният текст на лиценза (на английски, правно обвързващ): <https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode>
-Резюме на български: <https://creativecommons.org/licenses/by-nc-sa/4.0/deed.bg>
+Full legal license text: <https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode>
+Human-readable summary: <https://creativecommons.org/licenses/by-nc-sa/4.0/>
