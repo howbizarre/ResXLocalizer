@@ -77,8 +77,11 @@ export class FileListProvider implements vscode.WebviewViewProvider {
     this.view.webview.html = this.renderHtml(uris, neutralLanguage);
   }
 
-  public clearSelection(): void {
-    void this.view?.webview.postMessage({ command: "clearSelection" });
+  public uncheckFiles(paths: string[]): void {
+    if (paths.length === 0) {
+      return;
+    }
+    void this.view?.webview.postMessage({ command: "uncheckFiles", paths });
   }
 
   private async handleAddLocale(
@@ -389,9 +392,12 @@ export class FileListProvider implements vscode.WebviewViewProvider {
       });
 
       window.addEventListener("message", (event) => {
-        if (event.data?.command === "clearSelection") {
+        if (event.data?.command === "uncheckFiles" && Array.isArray(event.data.paths)) {
+          const toUncheck = new Set(event.data.paths);
           checkboxes.forEach((cb) => {
-            cb.checked = false;
+            if (toUncheck.has(cb.dataset.path)) {
+              cb.checked = false;
+            }
           });
         }
       });

@@ -4,8 +4,6 @@ import { TablePanel } from "./tablePanel";
 import { FileListProvider } from "./fileListProvider";
 import { createMasterResxFile } from "./createMaster";
 
-let lastOpenedUris: vscode.Uri[] | null = null;
-
 async function openTable() {
   const groups = await findResxGroups();
   if (groups.length === 0) {
@@ -18,25 +16,12 @@ async function openTable() {
     }
     return;
   }
-  lastOpenedUris = null;
   TablePanel.show(groups);
 }
 
 async function openTableForUris(uris: vscode.Uri[]) {
   const groups = await groupResxFiles(uris);
-  lastOpenedUris = uris;
   TablePanel.show(groups);
-}
-
-async function refreshOpenTable() {
-  if (!TablePanel.currentPanel) {
-    return;
-  }
-  if (lastOpenedUris) {
-    await openTableForUris(lastOpenedUris);
-  } else {
-    await openTable();
-  }
 }
 
 export function activate(context: vscode.ExtensionContext) {
@@ -47,19 +32,18 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand("resxlocalizer.openTable", () => openTable()),
     vscode.commands.registerCommand("resxlocalizer.refreshTable", () => {
       void fileListProvider.refresh();
-      void refreshOpenTable();
+      void TablePanel.refreshAll();
     }),
-    TablePanel.onDidClose(() => {
-      lastOpenedUris = null;
-      fileListProvider.clearSelection();
+    TablePanel.onDidClose((uris) => {
+      fileListProvider.uncheckFiles(uris.map((u) => u.fsPath));
     })
   );
 
   const watcher = vscode.workspace.createFileSystemWatcher("**/*.resx");
-  watcher.onDidChange(() => void refreshOpenTable());
+  watcher.onDidChange(() => void TablePanel.refreshAll());
   const onStructuralChange = () => {
     void fileListProvider.refresh();
-    void refreshOpenTable();
+    void TablePanel.refreshAll();
   };
   watcher.onDidCreate(onStructuralChange);
   watcher.onDidDelete(onStructuralChange);
