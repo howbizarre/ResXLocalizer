@@ -4,7 +4,7 @@
  * HTML inline (unlike {@link ../panels/tablePanel}, which delegates to a separate render
  * module) since the tree is small and specific to this one view. Handles checkbox selection
  * (opens a table via the callback passed to its constructor), "Add new" locale, and the
- * empty-state "Create master .resx file" button.
+ * always-visible "Create master .resx file" action at the top of the panel.
  */
 import * as vscode from "vscode";
 import { findResxFiles, parseResxFile, parseResxFileName } from "../resx/resxParser";
@@ -233,10 +233,14 @@ export class FileListProvider implements vscode.WebviewViewProvider {
       })
       .join("\n");
 
-    const body =
+    const createMasterAction = `<button id="createMasterBtn" class="create-master-btn" title="Create a new master .resx file"><span class="plus-icon">+</span><span>Create master .resx file</span></button>`;
+
+    const treeOrEmptyState =
       uris.length === 0
-        ? `<div class="empty-state"><p>No .resx files found in this workspace.</p><button id="createMasterBtn" class="primary-btn">Create master .resx file</button></div>`
+        ? `<div class="empty-state"><p>No .resx files found in this workspace.</p></div>`
         : groupsHtml;
+
+    const body = `${createMasterAction}${treeOrEmptyState}`;
 
     return `<!DOCTYPE html>
 <html lang="en">
@@ -257,17 +261,26 @@ export class FileListProvider implements vscode.WebviewViewProvider {
       opacity: 0.8;
       margin: 0 0 10px;
     }
-    .primary-btn {
-      padding: 6px 12px;
-      border: none;
-      border-radius: 3px;
-      background: var(--vscode-button-background);
-      color: var(--vscode-button-foreground);
+    .create-master-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      width: 100%;
+      box-sizing: border-box;
+      padding: 6px 8px;
+      margin-bottom: 10px;
+      border: 1px solid color-mix(in srgb, var(--vscode-charts-blue, var(--vscode-focusBorder)) 35%, transparent);
+      border-radius: 4px;
+      background: color-mix(in srgb, var(--vscode-charts-blue, var(--vscode-focusBorder)) 8%, transparent);
+      color: var(--vscode-charts-blue, var(--vscode-textLink-foreground));
+      font-family: var(--vscode-font-family);
+      font-size: 12.5px;
+      font-weight: 600;
       cursor: pointer;
-      font-size: 13px;
+      text-align: left;
     }
-    .primary-btn:hover {
-      background: var(--vscode-button-hoverBackground);
+    .create-master-btn:hover {
+      background: color-mix(in srgb, var(--vscode-charts-blue, var(--vscode-focusBorder)) 16%, transparent);
     }
     details.group {
       margin-bottom: 4px;
