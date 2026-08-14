@@ -94,14 +94,15 @@
     "fast-xml-parser": "^5.10.1"
   },
   "devDependencies": {
+    "@babel/core": "^8.0.1",
+    "@babel/eslint-parser": "^8.0.1",
+    "@babel/preset-typescript": "^8.0.1",
     "@types/node": "^26.2.0",
     "@types/vscode": "^1.90.0",
-    "@typescript-eslint/eslint-plugin": "^8.67.0",
-    "@typescript-eslint/parser": "^8.67.0",
     "@vscode/vsce": "^3.1.0",
     "esbuild": "^0.28.2",
     "eslint": "^10.8.1",
-    "typescript": "^5.5.4"
+    "typescript": "^7.0.2"
   },
   "allowScripts": {
     "esbuild@0.28.2": true
