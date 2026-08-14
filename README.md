@@ -43,7 +43,7 @@ A Visual Studio Code extension that shows your `.resx` localization resources (t
 - **Export the table to CSV or JSON**, and **import** translations back from a CSV/JSON file — validated before anything is written, with a review log if existing values got overwritten.
 - **Sidebar view** in the Activity Bar with a tree of every `.resx` file in the project, grouped by folder and by "family" — check a box to open that file in a table.
 - **Add a new language** to an existing file family directly from the sidebar — pick from a list of common languages, or type any custom locale code (e.g. `pt-BR`); the new file is created automatically with every key from the base file, ready to be translated.
-- **Create a brand-new "master" `.resx` file** if the project doesn't have one yet.
+- **Create a brand-new "master" `.resx` file** at any time — the button is always available at the top of the sidebar, whether the project has no `.resx` files yet or already has plenty.
 - **Auto-detects the base language** (e.g. "en") from `.csproj`/`.vbproj` (`<NeutralLanguage>`) or `AssemblyInfo` (`NeutralResourcesLanguage`) — the same settings your .NET project already uses.
 - **Auto-refreshes** — if a file is changed, added, or deleted on disk (e.g. via `git pull` or another editor), the table and sidebar update themselves.
 - Each `.resx` "family" opens in its **own tab**, so different tables never mix together.
@@ -85,11 +85,11 @@ code --install-extension resxlocalizer-0.0.1.vsix
 3. The extension automatically scans the whole folder for `.resx` files:
 
    - **If there are `.resx` files already** — you'll see a tree of folders and files (see the next section).
-   - **If there are none yet** — you'll just see a short message and a button:
+   - **If there are none yet** — you'll just see a short message, plus the same **"Create master .resx file"** button described below:
 
      ![Empty state — create a new file](media/screenshots/empty-state.png)
 
-     Clicking **"Create master .resx file"** walks you through two simple steps: pick a folder, then type a name (e.g. `Strings`) — the extension creates an empty, valid `.resx` file (the same structure Visual Studio generates), ready for your first keys.
+     Clicking it walks you through two simple steps: pick a folder, then type a name (e.g. `Strings`) — the extension creates an empty, valid `.resx` file (the same structure Visual Studio generates), ready for your first keys.
 
 4. Check the box next to the files you want to see in a table (see below), or right-click a `.resx` file in the regular VS Code Explorer → **"ResXLocalizer: Open Resx Table"**.
 
@@ -98,6 +98,8 @@ code --install-extension resxlocalizer-0.0.1.vsix
 ## Sidebar — file list
 
 ![Sidebar file list](media/screenshots/sidebar-view.png)
+
+The **"Create master .resx file"** button at the top is always there, whether or not the project already has `.resx` files — use it any time you need to start a brand-new family (e.g. a `Strings.resx` for a new feature area), without it getting in the way of the tree below it.
 
 Files are organized as a tree:
 
@@ -249,6 +251,7 @@ For anyone building or maintaining ResXLocalizer itself:
 - `npm run lint` — ESLint.
 - `npm run package` — production build (invoked by `vscode:prepublish`).
 - `npm run vsix` — package the extension into a `.vsix` file (`@vscode/vsce`).
+- `npm run publish` — publish the current version straight to the Marketplace (`vsce publish`); requires being logged in via `vsce login <publisher>` first.
 
 For a map of the source code itself (folder layout, data flow, conventions worth knowing before
 changing something), see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — useful for contributors
