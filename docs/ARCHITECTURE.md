@@ -94,6 +94,16 @@ calling into `resx/`.
 - **`.vscodeignore` excludes sample/dev-only folders (e.g. `locales/**`) by exact name.** If you
   rename such a folder, update the matching ignore pattern too, or it silently ships inside the
   `.vsix` again.
+- **`typescript` is on the native (Go-ported) 7.x compiler, not the classic JS one.** Two
+  consequences worth knowing: (1) `tsconfig.json` needs an explicit `"types": ["node"]` — this
+  compiler doesn't auto-include every package under `node_modules/@types` the way 5.x did, so
+  without it, `Buffer` and friends fail to resolve. (2) `@typescript-eslint` doesn't support TS 7
+  yet (its `peerDependencies` cap out at `<6.1.0`), so linting uses `@babel/eslint-parser` +
+  `@babel/preset-typescript` instead — a syntax-only TypeScript parser that doesn't care what
+  `typescript` version (or even whether "typescript" is installed at all) is in `node_modules`.
+  One practical effect: ESLint here is **not type-aware** — `tsc --noEmit` (via `noUnusedLocals`/
+  `noUnusedParameters` in `tsconfig.json`) is what now catches unused locals/parameters, not an
+  ESLint rule. Keep that split in mind before assuming an ESLint rule would catch a type-level issue.
 
 ## Adding a new webview action (e.g. a new button)
 
